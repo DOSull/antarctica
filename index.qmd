@@ -1,8 +1,10 @@
 ---
 title: "Science impacts on Antarctica"
 listing:
-  contents: notebooks/
-  type: grid
+  contents: 
+    - notebooks/0*.qmd
+  type: table
+  sort: false
   grid-columns: 2
 ---
 

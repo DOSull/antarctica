@@ -3,9 +3,9 @@
     "listing": "/index.html",
     "items": [
       "/notebooks/00-notes.html",
+      "/notebooks/01-exploring-gps-data.html",
       "/notebooks/02-collating-gps-data.html",
-      "/notebooks/03-estimating-a-hiking-function.html",
-      "/notebooks/01-exploring-gps-data.html"
+      "/notebooks/03-estimating-a-hiking-function.html"
     ]
   }
 ]
