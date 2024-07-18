@@ -1,0 +1,17 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "Science impacts on Antarctica"
+  sidebar:
+    contents:
+      - index.qmd 
+      - auto: notebooks/
+    floating: true
+  page-navigation: true
+
+format:
+  html:
+    toc: true
+    df-print: kable
