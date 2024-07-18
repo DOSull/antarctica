@@ -3,9 +3,8 @@ title: "Science impacts on Antarctica"
 listing:
   contents: 
     - notebooks/0*.qmd
-  type: table
+  type: default
   sort: false
-  grid-columns: 2
 ---
 
 A simple website to share ongoing project work on possible impacts of science in Antarctica.

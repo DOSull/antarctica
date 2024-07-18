@@ -11,5 +11,6 @@ website:
 
 format:
   html:
+    theme: morph
     toc: true
     df-print: kable
