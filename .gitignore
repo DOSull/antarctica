@@ -2,6 +2,7 @@
 _data/
 _freeze/
 notebooks/
+!docs/notebooks/
 scripts/
 experimental-outputs/
 from-quantarctica/
