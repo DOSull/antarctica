@@ -194,10 +194,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#speed-estimates" id="toc-speed-estimates" class="nav-link" data-scroll-target="#speed-estimates">Speed estimates</a></li>
   <li><a href="#gps-height-and-elevation-from-the-dem" id="toc-gps-height-and-elevation-from-the-dem" class="nav-link" data-scroll-target="#gps-height-and-elevation-from-the-dem">GPS height and elevation from the DEM</a></li>
   </ul></li>
-  <li><a href="#a-hiking-function" id="toc-a-hiking-function" class="nav-link" data-scroll-target="#a-hiking-function">A hiking function</a>
-  <ul class="collapse">
-  <li><a href="#removing-uninteresting-sequences-to-improve-hiking-function-estimation" id="toc-removing-uninteresting-sequences-to-improve-hiking-function-estimation" class="nav-link" data-scroll-target="#removing-uninteresting-sequences-to-improve-hiking-function-estimation">Removing uninteresting sequences to improve hiking function estimation</a></li>
-  </ul></li>
+  <li><a href="#a-hiking-function" id="toc-a-hiking-function" class="nav-link" data-scroll-target="#a-hiking-function">A hiking function</a></li>
   <li><a href="#conclusion-a-reasonable-gps-file-cleaning-function" id="toc-conclusion-a-reasonable-gps-file-cleaning-function" class="nav-link" data-scroll-target="#conclusion-a-reasonable-gps-file-cleaning-function">Conclusion: a reasonable GPS file cleaning function</a></li>
   </ul>
 </nav>
@@ -262,6 +259,14 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-07-19</td>
+<td style="text-align: left;">Updated to add turn angle calculation and source gps cleaning function</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"></td>
+<td style="text-align: left;">from gps-data-util.R.</td>
+</tr>
+<tr class="odd">
 <td style="text-align: left;">2024-07-16</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -282,14 +287,9 @@ Update History
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo) <span class="co"># useful for serial data</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># simple function to read GPS CSV as a sf dataset</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>get_gps_data_as_sf <span class="ot">&lt;-</span> <span class="cf">function</span>(fname) {</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(fname) <span class="sc">|&gt;</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">clean_names</span>() <span class="sc">|&gt;</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3031</span>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(R.utils)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/gps-data-utils.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>These notes explore the usefulness, accuracy etc. of the provided GPS data.</p>
 <p>Of particular interest is the asymmetry or not of movement speeds with respect to slope, given the salience of this for ‘hiking functions’. It is possible in a largely ‘unpathed’ environment that the asymmetry is limited (see e.g.&nbsp;Rees 2004<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>)</p>
@@ -358,7 +358,7 @@ Update History
 </div>
 </div>
 </div>
-<p>This being the case it seems reasonable to remove observations with clearly unreasonable speed estimates, assuming that these result from use of other forms of transport. However, before doing so, we augment the data with additional estimates of speed, distance, etc. calculated from consecutive fixes (it is not advisable to remove any fixes before making these estimates).</p>
+<p>This being the case it seems reasonable to remove observations with clearly unreasonable speed estimates, assuming that these result from use of other forms of transport. However, before doing so, we augment the data with additional estimates of speed, distance, turn angle, etc. calculated from consecutive fixes (it is not advisable to remove any fixes before making these estimates).</p>
 </section>
 <section id="sanity-checking-the-gps-estimates-of-speed-distance-and-height" class="level2">
 <h2 class="anchored" data-anchor-id="sanity-checking-the-gps-estimates-of-speed-distance-and-height">Sanity checking the GPS estimates of speed, distance, and height</h2>
@@ -391,7 +391,7 @@ Update History
 <span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(heights_from_dem) <span class="sc">|&gt;</span></span>
 <span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Z =</span> <span class="st">`</span><span class="at">dry-valleys-10m</span><span class="st">`</span>) <span class="sc">|&gt;</span></span>
 <span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(slope_from_dem) <span class="sc">|&gt;</span></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dem_slope_percent =</span> <span class="fu">tan</span>(slope) <span class="sc">*</span> <span class="dv">100</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dem_slope =</span> <span class="fu">tan</span>(slope)) <span class="sc">|&gt;</span></span>
 <span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>slope) <span class="sc">|&gt;</span></span>
 <span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_cols</span>(TRI_from_dem)</span>
 <span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
@@ -401,17 +401,20 @@ Update History
 <p>Now calculate estimates of distance, change in elevation, and slope between observations, from these numbers and from the GPS data.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>gps_data_plus <span class="ot">&lt;-</span> gps_data_plus <span class="sc">|&gt;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dx =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(X), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)), </span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">dy =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(Y), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)), </span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">dz =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(Z), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">dh =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(height_m), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">dt =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(date_time), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxy =</span> <span class="fu">sqrt</span>(dx<span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dy <span class="sc">^</span> <span class="dv">2</span>),</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxyz =</span> <span class="fu">sqrt</span>(dx <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dy <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dz <span class="sc">^</span> <span class="dv">2</span>),</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxyh =</span> <span class="fu">sqrt</span>(distance_m <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dh <span class="sc">^</span> <span class="dv">2</span>),</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">slope_h =</span> dh <span class="sc">/</span> distance_m <span class="sc">*</span> <span class="dv">100</span>,</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">slope_z =</span> dz <span class="sc">/</span> dxy <span class="sc">*</span> <span class="dv">100</span>,</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">speedxy =</span> dxy <span class="sc">/</span> dt <span class="sc">*</span> <span class="dv">3600</span> <span class="sc">/</span> <span class="dv">1000</span>, <span class="at">speedxyz =</span> dxyz <span class="sc">/</span> dt <span class="sc">*</span> <span class="dv">3600</span> <span class="sc">/</span> <span class="dv">1000</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dx1 =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(X), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)), </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>         <span class="at">dy1 =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(Y), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">dx2 =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(X), <span class="at">lag =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">dy2 =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(Y), <span class="at">lag =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">turn_angle =</span> <span class="fu">get_turn_angle</span>(dx1, dy1, dx2, dy2),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">dz =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(Z), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">dh =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(height_m), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">dt =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(date_time), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxy =</span> <span class="fu">sqrt</span>(dx1<span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dy1 <span class="sc">^</span> <span class="dv">2</span>),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxyz =</span> <span class="fu">sqrt</span>(dx1 <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dy1 <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dz <span class="sc">^</span> <span class="dv">2</span>),</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>         <span class="at">dxyh =</span> <span class="fu">sqrt</span>(distance_m <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dh <span class="sc">^</span> <span class="dv">2</span>),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">slope_h =</span> dh <span class="sc">/</span> distance_m,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">slope_z =</span> dz <span class="sc">/</span> dxy,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>         <span class="at">speedxy =</span> dxy <span class="sc">/</span> dt <span class="sc">*</span> <span class="dv">3600</span> <span class="sc">/</span> <span class="dv">1000</span>, <span class="at">speedxyz =</span> dxyz <span class="sc">/</span> dt <span class="sc">*</span> <span class="dv">3600</span> <span class="sc">/</span> <span class="dv">1000</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now some comparisons.</p>
 <section id="distance-estimates" class="level3">
@@ -530,13 +533,15 @@ Update History
 </section>
 <section id="a-hiking-function" class="level2">
 <h2 class="anchored" data-anchor-id="a-hiking-function">A hiking function</h2>
-<p>A hiking function relates slope of the land to speed at which it is traversed. Using the GPS unit reported speed and slope derived from GPS unit reported distance and height, locally estimated scatter plot smoothing yields an expected approximately Gaussian curve with the peak speed at or close to 0 slope.</p>
+<p>A hiking function relates slope of the land to speed at which it is traversed. Using the GPS unit reported speed and slope derived from GPS unit reported distance and height, locally estimated scatter plot smoothing yields an approximately Gaussian curve with the peak speed at or close to 0 slope. This gives some confidence that we can use these data to estimate hiking functions. The approach implied in this plot is insufficient, as the data contain many fixes that don’t give much information about ‘hiking’ as such. The preponderance of lower turn angle fixes in the more ‘mobile’ parts of the data (i.e.&nbsp;higher speeds) suggests that it may be possible to filter out those data points.</p>
+<p>Better estimation of a hiking function is left to a later notebook (see <a href="../notebooks/03-estimating-a-hiking-function.html">Estimating a hiking function</a>).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gps_data_plus <span class="sc">|&gt;</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dt <span class="sc">==</span> <span class="dv">30</span>, speed_km_h <span class="sc">&lt;</span> <span class="dv">10</span>, <span class="sc">!</span><span class="fu">is.na</span>(slope_h)) <span class="sc">|&gt;</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> slope_h, <span class="at">y =</span> speed_km_h)) <span class="sc">+</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> slope_h, <span class="at">y =</span> speed_km_h))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># here's a possible filter to apply to the data to improve the estimation</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dt <span class="sc">==</span> <span class="dv">30</span>, speed_km_h <span class="sc">&lt;</span> <span class="dv">10</span>, <span class="sc">!</span><span class="fu">is.na</span>(slope_h), distance_m <span class="sc">&gt;</span> <span class="fl">2.5</span>, turn_angle <span class="sc">&lt;</span> <span class="dv">150</span>) <span class="sc">|&gt;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> slope_h, <span class="at">y =</span> speed_km_h, <span class="at">colour =</span> turn_angle)) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="fu">aes</span>(<span class="at">x =</span> slope_h, <span class="at">y =</span> speed_km_h))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -546,11 +551,7 @@ Update History
 </div>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">loess</span>(speed_km_h <span class="sc">~</span> slope_h, <span class="at">data =</span> gps_data_plus)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="removing-uninteresting-sequences-to-improve-hiking-function-estimation" class="level3">
-<h3 class="anchored" data-anchor-id="removing-uninteresting-sequences-to-improve-hiking-function-estimation">Removing uninteresting sequences to improve hiking function estimation</h3>
-<p>Many data in the above plot are probably from ‘milling about’ in breaks, at camp, or around experiments, rather than while on the move. The most effective way to remove such sections from the data is likely based on the density of fixes.</p>
-<p>However, this should be carried out across all GPS datasets not on each individually.</p>
-</section>
+<p>Many data in the above plot are probably from ‘milling about’ in breaks, at camp, or around experiments, rather than while on the move. The best way to remove these sections is probably based on turn angles.</p>
 </section>
 <section id="conclusion-a-reasonable-gps-file-cleaning-function" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion-a-reasonable-gps-file-cleaning-function">Conclusion: a reasonable GPS file cleaning function</h2>
@@ -560,56 +561,15 @@ Update History
 <li>Clean names with <code>janitor::clean_names</code>.</li>
 <li>Remove meaningless variable <code>x</code>.</li>
 <li>Add a <code>name</code> reflecting the id of the person whose data is.</li>
-<li>Augment data with <code>dt</code> (time interval between fixes), dh<code>(height change between fixes), and</code>slope_h` (estimated slope between fixes).</li>
+<li>Augment data with <code>dt</code> (time interval between fixes), <code>dh</code> (height change between fixes), <code>slope_h</code> (estimated slope between fixes), and <code>turn_angle</code> (change in direction at this fix).</li>
 <li>Remove data outside expected latitudinal range (&gt; -78 latitude).</li>
 <li>Remove fixes with high estimated speeds (&gt;~ 10km/h).</li>
 <li>Remove fixes with long estimated distances (&gt;~ 60m).</li>
 <li>Identify breaks in the series where <code>dt != 30</code> and tag subsets of the data accordingly.</li>
+<li>Count number of fixes in each subset – consider removing small ones…</li>
 <li>Drop NAs and any rows where <code>dt != 30</code>.</li>
 </ul>
-<p>This gives us the following function.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>get_cleaned_gps_data <span class="ot">&lt;-</span> <span class="cf">function</span>(fname) {</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(fname) <span class="sc">|&gt;</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>x) <span class="sc">|&gt;</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">name =</span> person,</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">rcr =</span> <span class="fu">as.logical</span>(rcr),</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">date_time =</span> <span class="fu">ymd_hms</span>(<span class="fu">paste</span>(date, time)),</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">dh =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(height_m), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">dxyh =</span> <span class="fu">sqrt</span>(distance_m <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dh <span class="sc">^</span> <span class="dv">2</span>),</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">slope_h =</span> dh <span class="sc">/</span> distance_m <span class="sc">*</span> <span class="dv">100</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(latitude <span class="sc">&lt;=</span> <span class="sc">-</span><span class="dv">78</span>,</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>           speed_km_h <span class="sc">&lt;</span> <span class="dv">10</span>,</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>           distance_m <span class="sc">&lt;</span> <span class="dv">60</span>,</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>           hdop <span class="sc">&lt;</span> <span class="dv">5</span>,</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>           vdop <span class="sc">&lt;</span> <span class="dv">5</span>,</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>           pdop <span class="sc">&lt;</span> <span class="dv">5</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">dt =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(date_time), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">break_in_series =</span> <span class="fu">is.na</span>(dt) <span class="sc">|</span> dt <span class="sc">!=</span> <span class="dv">30</span>,</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>           <span class="at">subset =</span> <span class="fu">cumsum</span>(break_in_series), </span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>           <span class="at">subset =</span> <span class="fu">str_c</span>(person, <span class="fu">str_pad</span>(subset, <span class="at">width =</span> <span class="dv">3</span>, <span class="at">side =</span> <span class="st">"left"</span>, <span class="at">pad =</span> <span class="st">"0"</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(dt <span class="sc">==</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>break_in_series) <span class="sc">|&gt;</span></span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">drop_na</span>()</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>which can be called as below:</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>person <span class="ot">&lt;-</span> <span class="st">"Fraser"</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>fname <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/GPS-1516Season-MiersValley/{person}-FINAL.csv"</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">get_cleaned_gps_data</span>(fname) <span class="sc">|&gt;</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="fu">aes</span>(<span class="at">x =</span> longitude, <span class="at">y =</span> latitude, <span class="at">colour =</span> subset))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="01-exploring-gps-data_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
+<p>This is the basis for a function <code>get_cleaned_gps_data()</code> in the script <code>gps-data-utils.R</code> used for cleaning up / augmenting the raw CSV files.</p>
 
 
 </section>

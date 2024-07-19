@@ -187,9 +187,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#data-cleaning-function-per-this-notebook" id="toc-data-cleaning-function-per-this-notebook" class="nav-link active" data-scroll-target="#data-cleaning-function-per-this-notebook">Data cleaning function (per this notebook)</a></li>
-  <li><a href="#function-to-convert-gps-data-to-projected-sf-data" id="toc-function-to-convert-gps-data-to-projected-sf-data" class="nav-link" data-scroll-target="#function-to-convert-gps-data-to-projected-sf-data">Function to convert GPS data to projected sf data</a></li>
-  <li><a href="#read-raw-files-clean-and-write-any-that-still-have-data-remaining" id="toc-read-raw-files-clean-and-write-any-that-still-have-data-remaining" class="nav-link" data-scroll-target="#read-raw-files-clean-and-write-any-that-still-have-data-remaining">Read raw files, clean and write any that still have data remaining</a></li>
+  <li><a href="#read-raw-files-clean-and-write-any-that-still-have-data-remaining" id="toc-read-raw-files-clean-and-write-any-that-still-have-data-remaining" class="nav-link active" data-scroll-target="#read-raw-files-clean-and-write-any-that-still-have-data-remaining">Read raw files, clean and write any that still have data remaining</a></li>
   <li><a href="#write-to-individual-gpkg-files-and-a-single-all-traces-file" id="toc-write-to-individual-gpkg-files-and-a-single-all-traces-file" class="nav-link" data-scroll-target="#write-to-individual-gpkg-files-and-a-single-all-traces-file">Write to individual GPKG files and a single all traces file</a></li>
   </ul>
 </nav>
@@ -254,6 +252,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-07-19</td>
+<td style="text-align: left;">Rerun to add turn angles.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-07-17</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -264,159 +266,116 @@ Update History
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tmap)</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(zoo) <span class="co"># useful for serial data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/gps-data-utils.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="data-cleaning-function-per-this-notebook" class="level3">
-<h3 class="anchored" data-anchor-id="data-cleaning-function-per-this-notebook">Data cleaning function (per this <a href="../notebooks/01-exploring-gps-data.html">notebook</a>)</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>get_cleaned_gps_data <span class="ot">&lt;-</span> <span class="cf">function</span>(fname, person) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(fname) <span class="sc">|&gt;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">clean_names</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>x) <span class="sc">|&gt;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">name =</span> person,</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>           <span class="at">rcr =</span> <span class="fu">as.logical</span>(rcr),</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>           <span class="at">date_time =</span> <span class="fu">ymd_hms</span>(<span class="fu">paste</span>(date, time)),</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">dh =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(height_m), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">dxyh =</span> <span class="fu">sqrt</span>(distance_m <span class="sc">^</span> <span class="dv">2</span> <span class="sc">+</span> dh <span class="sc">^</span> <span class="dv">2</span>),</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">slope_h =</span> dh <span class="sc">/</span> distance_m <span class="sc">*</span> <span class="dv">100</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(latitude <span class="sc">&lt;=</span> <span class="sc">-</span><span class="dv">78</span>,</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>           speed_km_h <span class="sc">&lt;</span> <span class="dv">10</span>,</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>           distance_m <span class="sc">&lt;</span> <span class="dv">60</span>,</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>           hdop <span class="sc">&lt;</span> <span class="dv">5</span>,</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>           vdop <span class="sc">&lt;</span> <span class="dv">5</span>,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>           pdop <span class="sc">&lt;</span> <span class="dv">5</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">dt =</span> <span class="fu">as.numeric</span>(<span class="fu">diff</span>(<span class="fu">as.zoo</span>(date_time), <span class="at">na.pad =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">break_in_series =</span> <span class="fu">is.na</span>(dt) <span class="sc">|</span> dt <span class="sc">!=</span> <span class="dv">30</span>,</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>           <span class="at">subset =</span> <span class="fu">cumsum</span>(break_in_series), </span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>           <span class="at">subset =</span> <span class="fu">str_c</span>(person, <span class="fu">str_pad</span>(subset, <span class="at">width =</span> <span class="dv">3</span>, <span class="at">side =</span> <span class="st">"left"</span>, <span class="at">pad =</span> <span class="st">"0"</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(dt <span class="sc">==</span> <span class="dv">30</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>break_in_series) <span class="sc">|&gt;</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">drop_na</span>()</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-<section id="function-to-convert-gps-data-to-projected-sf-data" class="level3">
-<h3 class="anchored" data-anchor-id="function-to-convert-gps-data-to-projected-sf-data">Function to convert GPS data to projected sf data</h3>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>get_gps_data_as_sf <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">3031</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
 <section id="read-raw-files-clean-and-write-any-that-still-have-data-remaining" class="level3">
 <h3 class="anchored" data-anchor-id="read-raw-files-clean-and-write-any-that-still-have-data-remaining">Read raw files, clean and write any that still have data remaining</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>src_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/GPS-1516Season-MiersValley"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>tgt_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/cleaned-gps-data"</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(tgt_folder)) {</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(tgt_folder)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>persons <span class="ot">&lt;-</span> <span class="fu">dir</span>(src_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(str_split_i, <span class="st">"-"</span>, <span class="at">i =</span> <span class="dv">1</span>)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>dfs <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> persons) {</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">get_cleaned_gps_data</span>(<span class="fu">str_glue</span>(<span class="st">"{src_folder}/{p}-FINAL.csv"</span>), p) </span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(df) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">|&gt;</span> <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/{p}-cleaned.csv"</span>))</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    dfs[[i]] <span class="ot">&lt;-</span> df</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(dfs) <span class="sc">|&gt;</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/all-gps-traces.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>src_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/GPS-1516Season-MiersValley"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tgt_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/cleaned-gps-data"</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(tgt_folder)) {</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(tgt_folder)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>persons <span class="ot">&lt;-</span> <span class="fu">dir</span>(src_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(str_split_i, <span class="st">"-"</span>, <span class="at">i =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>()</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dfs <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> persons) {</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">get_cleaned_gps_data</span>(<span class="fu">str_glue</span>(<span class="st">"{src_folder}/{p}-FINAL.csv"</span>), p) </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(df) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">|&gt;</span> <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/{p}-cleaned.csv"</span>))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    dfs[[i]] <span class="ot">&lt;-</span> df</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(dfs) <span class="sc">|&gt;</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/all-gps-traces.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="write-to-individual-gpkg-files-and-a-single-all-traces-file" class="level3">
 <h3 class="anchored" data-anchor-id="write-to-individual-gpkg-files-and-a-single-all-traces-file">Write to individual GPKG files and a single all traces file</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">str_c</span>(tgt_folder, <span class="st">"/"</span>, <span class="fu">dir</span>(<span class="at">path =</span> tgt_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>))</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> <span class="fu">seq_along</span>(files)) {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(files[f]) <span class="sc">|&gt;</span> </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">get_gps_data_as_sf</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_replace</span>(files[f], <span class="st">"csv"</span>, <span class="st">"gpkg"</span>), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">str_c</span>(tgt_folder, <span class="st">"/"</span>, <span class="fu">dir</span>(<span class="at">path =</span> tgt_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> files) {</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_gps_data_as_sf</span>(f) <span class="sc">|&gt;</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_replace</span>(f, <span class="st">"csv"</span>, <span class="st">"gpkg"</span>), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/all-gps-traces.gpkg' using driver `GPKG'
 Writing layer `all-gps-traces' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/all-gps-traces.gpkg' using driver `GPKG'
-Writing 112346 features with 24 fields and geometry type Point.
+Writing 112216 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/AVC-cleaned.gpkg' using driver `GPKG'
 Writing layer `AVC-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/AVC-cleaned.gpkg' using driver `GPKG'
-Writing 5069 features with 24 fields and geometry type Point.
+Writing 5069 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Ben-cleaned.gpkg' using driver `GPKG'
 Writing layer `Ben-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Ben-cleaned.gpkg' using driver `GPKG'
-Writing 6933 features with 24 fields and geometry type Point.
+Writing 6918 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Charlie-cleaned.gpkg' using driver `GPKG'
 Writing layer `Charlie-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Charlie-cleaned.gpkg' using driver `GPKG'
-Writing 5870 features with 24 fields and geometry type Point.
+Writing 5851 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Craig-cleaned.gpkg' using driver `GPKG'
 Writing layer `Craig-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Craig-cleaned.gpkg' using driver `GPKG'
-Writing 1669 features with 24 fields and geometry type Point.
+Writing 1668 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Fraser-cleaned.gpkg' using driver `GPKG'
 Writing layer `Fraser-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Fraser-cleaned.gpkg' using driver `GPKG'
-Writing 7224 features with 24 fields and geometry type Point.
+Writing 7216 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Gemma-cleaned.gpkg' using driver `GPKG'
 Writing layer `Gemma-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Gemma-cleaned.gpkg' using driver `GPKG'
-Writing 8431 features with 24 fields and geometry type Point.
+Writing 8428 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Georgia-cleaned.gpkg' using driver `GPKG'
 Writing layer `Georgia-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Georgia-cleaned.gpkg' using driver `GPKG'
-Writing 4687 features with 24 fields and geometry type Point.
+Writing 4685 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanHawes-cleaned.gpkg' using driver `GPKG'
 Writing layer `IanHawes-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanHawes-cleaned.gpkg' using driver `GPKG'
-Writing 6591 features with 24 fields and geometry type Point.
+Writing 6593 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanMcD-cleaned.gpkg' using driver `GPKG'
 Writing layer `IanMcD-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanMcD-cleaned.gpkg' using driver `GPKG'
-Writing 8877 features with 24 fields and geometry type Point.
+Writing 8861 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Jayne-cleaned.gpkg' using driver `GPKG'
 Writing layer `Jayne-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Jayne-cleaned.gpkg' using driver `GPKG'
-Writing 6464 features with 24 fields and geometry type Point.
+Writing 6448 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Kurt-cleaned.gpkg' using driver `GPKG'
 Writing layer `Kurt-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Kurt-cleaned.gpkg' using driver `GPKG'
-Writing 6182 features with 24 fields and geometry type Point.
+Writing 6178 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Marwan-cleaned.gpkg' using driver `GPKG'
 Writing layer `Marwan-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Marwan-cleaned.gpkg' using driver `GPKG'
-Writing 10408 features with 24 fields and geometry type Point.
+Writing 10385 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Paul-cleaned.gpkg' using driver `GPKG'
 Writing layer `Paul-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Paul-cleaned.gpkg' using driver `GPKG'
-Writing 7333 features with 24 fields and geometry type Point.
+Writing 7320 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Peyman-cleaned.gpkg' using driver `GPKG'
 Writing layer `Peyman-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Peyman-cleaned.gpkg' using driver `GPKG'
-Writing 8393 features with 24 fields and geometry type Point.
+Writing 8390 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Pierre-cleaned.gpkg' using driver `GPKG'
 Writing layer `Pierre-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Pierre-cleaned.gpkg' using driver `GPKG'
-Writing 8619 features with 24 fields and geometry type Point.
+Writing 8615 features with 26 fields and geometry type Point.
 Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Tim-cleaned.gpkg' using driver `GPKG'
 Writing layer `Tim-cleaned' to data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Tim-cleaned.gpkg' using driver `GPKG'
-Writing 9596 features with 24 fields and geometry type Point.</code></pre>
+Writing 9591 features with 26 fields and geometry type Point.</code></pre>
 </div>
 </div>
 
