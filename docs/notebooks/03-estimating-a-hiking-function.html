@@ -76,9 +76,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
-<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
-<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
-<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -339,7 +336,7 @@ Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-3-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -347,7 +344,7 @@ Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 <p>While the result is somewhat bell-shaped as we might hope, there are a lot of fixes that seem unlikely to be related to movement from place to place, rather they are ‘milling about’ in place - such as at basecamp, at experiment sites, at rest stops, etc.</p>
 <p>We can of course fit a curve of desired functional form. In the relevant literature, there are essentially two functional forms, exponential, in Waldo Tobler’s original formulation<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>, given by <span class="math display">\[
 v=6e^{-3.5\|{s+0.05}\|}
-\]</span> which gives hiking speed <span class="math inline">\(v\)</span> in km/h for a slope (given as rise over run) <span class="math inline">\(s\)</span>. This function has subsequently modified by others.<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
+\]</span> which gives hiking speed <span class="math inline">\(v\)</span> in km/h for a slope (given as rise over run) <span class="math inline">\(s\)</span>. This function has subsequently modified by others<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></p>
 <p>Other work<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> yields speeds essentially Gaussian with respect to slope centred at slight downward slopes, i.e.</p>
 <p><span class="math display">\[
 v = ae^{-b(s+c)^2}
@@ -382,7 +379,7 @@ v = ae^{-b(s+c)^2}
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-5-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -439,7 +436,7 @@ v = ae^{-b(s+c)^2}
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -470,7 +467,6 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 </section>
 <section id="filtering-by-densely-travelled-locations" class="level3">
 <h3 class="anchored" data-anchor-id="filtering-by-densely-travelled-locations">Filtering by densely travelled locations</h3>
-<p><strong>TODO</strong>: Add number of distinct individuals to the binned data as an additional potential filter.</p>
 <p>The idea here is that densely travelled locations are near base camps and similar sites, and not where scientists are ‘on the move’. The approach below uses hex binning to find densely trafficked areas and exclude fixes in those areas.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>hexes <span class="ot">&lt;-</span> all_traces <span class="sc">|&gt;</span></span>
@@ -493,7 +489,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-10-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -507,7 +503,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-11-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -536,7 +532,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-12-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -551,7 +547,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -563,7 +559,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-14-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -589,7 +585,7 @@ Achieved convergence tolerance: 1.49e-08</code></pre>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-15-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9"><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><img src="03-estimating-a-hiking-function_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
 </figure>
 </div>
 </div>
@@ -1031,31 +1027,6 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","loop":false,"closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom"});
-window.onload = () => {
-  lightboxQuarto.on('slide_before_load', (data) => {
-    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
-    const href = trigger.getAttribute('href');
-    if (href !== null) {
-      const imgEl = window.document.querySelector(`a[href="${href}"] img`);
-      if (imgEl !== null) {
-        const srcAttr = imgEl.getAttribute("src");
-        if (srcAttr && srcAttr.startsWith("data:")) {
-          slideConfig.href = srcAttr;
-        }
-      }
-    } 
-  });
-
-  lightboxQuarto.on('slide_after_load', (data) => {
-    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
-    if (window.Quarto?.typesetMath) {
-      window.Quarto.typesetMath(slideNode);
-    }
-  });
-
-};
-          </script>
 
 
 
