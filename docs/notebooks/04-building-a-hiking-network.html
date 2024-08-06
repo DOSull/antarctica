@@ -279,7 +279,7 @@ Update History
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggnewscale)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(whitebox)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../scripts/raster-to-graph-functions.R"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/raster-to-graph-functions.R"</span>))</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>base_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>input_folder <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{base_folder}/input"</span>)</span>
@@ -310,20 +310,22 @@ Update History
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="sc">|&gt;</span></span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">geom =</span> x)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Setup a resolution for use in building networks (i.e.&nbsp;determining which cells are adjacent to one another in vector GIS space). Although we have a DEM at 10m resolution, at least for now we’ll use a coarser grain for construction of the network.</p>
+<p>Setup a resolution for use in building networks (i.e.&nbsp;determining which cells are adjacent to one another in vector GIS space). Although we have a DEM at 10m resolution, at least for now we’ll use a coarser grain for construction of the network. It is in any case unclear what an appropriate resolution might be given the various approximations in play.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="fu">res</span>(terrain)[<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">5</span> <span class="co"># assume square pixels: 50m on a side</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> resolution <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">3</span>)) <span class="co"># -&gt; 53.7m  </span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>hexgrid_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-hex-grid-{resolution}.gpkg"</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{output_folder}/{basename}-graph-hex-{resolution}.txt"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># assume square pixels: 50m on a side</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="fu">res</span>(terrain)[<span class="dv">1</span>] <span class="sc">*</span> <span class="dv">5</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate hexagon spacing of equivalent area</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> resolution <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">3</span>))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>hexgrid_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-hex-grid-{resolution}.gpkg"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{output_folder}/{basename}-graph-hex-{resolution}.txt"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p><code>hex_resolution</code> is a hexagon spacing for use in <code>st_make_grid</code> that yields the same area cell as the square cell <code>resolution</code></p>
+<p><code>hex_resolution</code> is a hexagon spacing for use in <code>st_make_grid</code> that yields the same area cell as square cells with edge length given by <code>resolution</code></p>
 <section id="making-a-hex-grid-across-the-terrain" class="level2">
 <h2 class="anchored" data-anchor-id="making-a-hex-grid-across-the-terrain">Making a hex grid across the terrain</h2>
-<p>We build the network based on hex space points, not a square grid. This is helpful in making all edges the same length, as opposed to in a square grid where diagonal neighbour cell centres are further removed than edge neighbouring cells.</p>
-<p>Load a hex grid file if one has already been made, otherwise build it.</p>
-<p><strong>IMPORTANT NOTE:</strong> Don’t forget to remake this grid if messing with any of the code above here that might affect the spacing of the hex grid.</p>
+<p>We build the network based on hex spaced points, not a square grid. This is helpful in making all edges the same length, as opposed to in a square grid where diagonal neighbour cell centres are further apart than edge neighbouring cells.</p>
+<p>We load a hex grid file if one has already been made, otherwise build it.</p>
+<p><strong>IMPORTANT NOTE: Don’t forget to remake this grid if changing with any of the code prior to this point in the workflow in ways that affect the spacing of the hex grid.</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(hexgrid_file)) {</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> <span class="fu">st_read</span>(hexgrid_file)</span>
@@ -336,7 +338,7 @@ Update History
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_glue</span>(hexgrid_file), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Plot to make sure things are the right scale, in particular that the hexes we are going to get are the same area as the simple square grid cells would be (this isn’t critical, but it’s nice in terms of some kind of standardisation of what ‘resolution’ means for a hex grid).</p>
+<p>Make a plot to make sure things are the right scale, in particular that the hexes we get are the same area as the simple square grid cells would be (this isn’t critical, but it’s nice as a standardisation of what ‘resolution’ means for a hex grid).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>square_grid <span class="ot">&lt;-</span> focal_area <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_make_grid</span>(<span class="at">cellsize =</span> resolution)</span>
@@ -353,7 +355,7 @@ Update History
 </div>
 </div>
 </div>
-<p>By inspection these are similar. And we can check the areas that a hex grid at this spacing gives:</p>
+<p>By visual inspection these are similar. We can confirm that the hexagon area in a grid at this spacing is</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>focal_area <span class="sc">|&gt;</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_make_grid</span>(<span class="at">cellsize =</span> hex_cell_spacing, <span class="at">square =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span> </span>
@@ -373,16 +375,17 @@ Update History
 </section>
 <section id="retrieve-elevations-from-the-terrain" class="level2">
 <h2 class="anchored" data-anchor-id="retrieve-elevations-from-the-terrain">Retrieve elevations from the terrain</h2>
-<p>Although we do the modelling of hiking functions using GPS data, we don’t have complete elevation data for the area on that basis, so we retrieve these from the DEM.</p>
+<p>Although we do the modelling of hiking functions using elevations in the GPS data, we don’t have complete elevation data for the area on that basis, so we retrieve these from the DEM.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> terrain <span class="sc">|&gt;</span> </span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">extract</span>(xy <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>), <span class="at">method =</span> <span class="st">"bilinear"</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># make pts and remove any NAs that might result from interpolation</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> z[, <span class="dv">2</span>]) <span class="sc">|&gt;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(z))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># NAs are around the edges of the study area</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> z[, <span class="dv">2</span>]) <span class="sc">|&gt;</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(z))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>And again a map is helpful, although again we use only the focal area for speed.</p>
+<p>Again a map is helpful, although again we use only the focal area so we can see what’s going on—and for speed of plotting.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pts <span class="sc">|&gt;</span> <span class="fu">st_filter</span>(focal_area)) <span class="sc">+</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">colour =</span> z), <span class="at">size =</span> <span class="dv">20</span>) <span class="sc">+</span></span>
@@ -399,7 +402,7 @@ Update History
 </section>
 <section id="make-a-graph-i.e.-network-connecting-these-elevation-points" class="level2">
 <h2 class="anchored" data-anchor-id="make-a-graph-i.e.-network-connecting-these-elevation-points">Make a graph (i.e.&nbsp;network) connecting these elevation points</h2>
-<p><strong>IMPORTANT NOTE:</strong> Don’t forget to remake the graph if messing with any of the code above here that might affect the spacing of the hex grid.</p>
+<p>The <code>graph_from_points</code> function in <code>raster-to-graph-functions.R</code> creates an <code>igraph::graph</code> object from an (x, y) point set. <strong>IMPORTANT NOTE: Don’t forget to remake the graph if messing with any of the code above here that might affect the spacing of the hex grid.</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(graph_file)) {</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">read_graph</span>(graph_file) </span>
@@ -408,18 +411,20 @@ Update History
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_graph</span>(G, graph_file)</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Before we can visualize this easily, we have to attach various data to its elements. This includes a landcover layer with relative impedances. Note that for now this cover layer is entirely made up – pending consultation with someone more knowledgeable about conditions on the ground. As far as I can tell from imagery the high cost areas are ‘ice’ which I’ve arbitrarily assigned a relative cost of 5.</p>
+<p>Before we can visualize this easily, we have to attach various data to its elements (at the moment it is just a set of vertices without any attributes). The required data include a landcover layer with relative impedances. Note that for now this cover layer is entirely made up – pending consultation with someone more knowledgeable about conditions on the ground. As far as I can tell from imagery the high cost areas are ‘ice’ which I’ve arbitrarily assigned a relative cost of 5.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cover <span class="ot">&lt;-</span> <span class="fu">st_read</span>(landcover_file)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> cover, <span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">as.factor</span>(cost)), <span class="at">linewidth =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"white"</span>, <span class="st">"red"</span>), <span class="at">name =</span> <span class="st">"Relative cost"</span>) <span class="sc">+</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">new_scale_fill</span>() <span class="sc">+</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade <span class="sc">|&gt;</span> <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> cover, <span class="fu">aes</span>(<span class="at">fill =</span> <span class="fu">as.factor</span>(cost)), <span class="at">linewidth =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"white"</span>, <span class="st">"red"</span>), <span class="at">name =</span> <span class="st">"Relative cost"</span>) <span class="sc">+</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="co"># some ggnewscale shenanigans required to plot a second layer with fill aesthetic</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">new_scale_fill</span>() <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade <span class="sc">|&gt;</span> <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -428,6 +433,7 @@ Update History
 </div>
 </div>
 </div>
+<p>Next add attributes to the graph using the <code>assignment_movement_variables_to_graph</code> function in <code>raster-to-graph-functions.R</code></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>xyz <span class="ot">&lt;-</span> <span class="fu">extract_xyz_from_points</span>(pts)</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -437,7 +443,7 @@ Update History
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(cost)</span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># note... for now this uses a default Tobler hiking function</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_edges</span>(G, xyz, <span class="at">impedances =</span> costs<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, xyz, <span class="at">impedances =</span> costs<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we have a graph with coordinates assigned to its vertices, we can map it (after transforming to a <code>sf</code> dataset)</p>
 <div class="cell">
@@ -453,10 +459,11 @@ Update History
 </div>
 </div>
 </div>
-<p>It’s not clear above that this is a bidirectional network, but we can see by inspection, e.g.&nbsp;the first edge in the graph is between vertices 1 and 166. We can access these (in <code>igraph</code>’s rather abstruse way):</p>
+<p>It’s not clear above that this is a bidirectional network, but we can see by inspection, e.g.&nbsp;the first edge in the graph is between vertices 1 and 166. We can access these (in <code>igraph</code>’s rather abstruse way), as follows:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">edge_attr</span>(G, <span class="at">index =</span> <span class="fu">get.edge.ids</span>(G, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">166</span>, <span class="dv">166</span>, <span class="dv">1</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>G <span class="sc">|&gt;</span> </span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">edge_attr</span>(<span class="at">index =</span> <span class="fu">get.edge.ids</span>(G, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">166</span>, <span class="dv">166</span>, <span class="dv">1</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="kable-table">
 <table class="table table-sm table-striped small">
@@ -508,7 +515,7 @@ Update History
 </section>
 <section id="make-an-estimated-travel-time-map" class="level2">
 <h2 class="anchored" data-anchor-id="make-an-estimated-travel-time-map">Make an estimated travel time map</h2>
-<p>Using the graph representation we can get travel time from any start location to every other location. For the sake of illustraton we’ll make such a map from the graph vertex closest to the centre of the study area.</p>
+<p>Using the graph representation we can estimate travel times from any start location to every other location. For the sake of illustraton we’ll make such a map from the graph vertex closest to the centre of the study area.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>origin_i <span class="ot">&lt;-</span> centre_of_extent <span class="sc">|&gt;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_nearest_feature</span>(pts)</span>
@@ -531,13 +538,14 @@ Update History
 <span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">output =</span> tif_fname, </span>
 <span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">base =</span> <span class="fu">str_glue</span>(dem_file))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Reading the exported raster layer made by <code>whitebox::wbt_natural_neighbour_interpolation</code> back in we get a map of estimated travel times.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rast</span>(tif_fname) <span class="sc">|&gt;</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="fu">aes</span>(<span class="at">fill =</span> travel_time)) <span class="sc">+</span></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Spectral"</span>, <span class="at">name =</span> <span class="st">"Est. time hrs"</span>) <span class="sc">+</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_contour</span>(<span class="fu">aes</span>(<span class="at">z =</span> travel_time, <span class="at">colour =</span> travel_time), <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_contour</span>(<span class="fu">aes</span>(<span class="at">z =</span> travel_time), <span class="at">linewidth =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
@@ -548,6 +556,7 @@ Update History
 </div>
 </div>
 </div>
+<p>In practice we’ll use other graph functionalities than one origin to all destination shortest paths, but this gives the general idea.</p>
 
 
 </section>
@@ -972,7 +981,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","closeEffect":"zoom","openEffect":"zoom","loop":false,"descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","loop":false,"descPosition":"bottom","closeEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
