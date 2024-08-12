@@ -332,7 +332,7 @@ Update History
 <h2 class="anchored" data-anchor-id="making-a-hex-grid-across-the-terrain">Making a hex grid across the terrain</h2>
 <p>We build the network based on hex spaced points, not a square grid. This is helpful in making all edges the same length, as opposed to in a square grid where diagonal neighbour cell centres are further apart than edge neighbouring cells.</p>
 <p>We load a hex grid file if one has already been made, otherwise build it.</p>
-<p><strong>IMPORTANT NOTE: Don’t forget to remake this grid if changing with any of the code prior to this point in the workflow in ways that affect the spacing of the hex grid.</strong></p>
+<p><strong>IMPORTANT NOTE: Don’t forget to remake this grid if changing any of the code prior to this point in the workflow in ways that affect the spacing of the hex grid.</strong></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(hexgrid_file)) {</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> <span class="fu">st_read</span>(hexgrid_file)</span>
@@ -522,7 +522,7 @@ Update History
 </section>
 <section id="make-an-estimated-travel-time-map" class="level2">
 <h2 class="anchored" data-anchor-id="make-an-estimated-travel-time-map">Make an estimated travel time map</h2>
-<p>Using the graph representation we can estimate travel times from any start location to every other location. For the sake of illustraton we’ll make such a map from the graph vertex closest to the centre of the study area.</p>
+<p>Using the graph representation we can estimate travel times from any start location to every other location. For the sake of illustration we’ll make such a map from the graph vertex closest to the centre of the study area.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>origin_i <span class="ot">&lt;-</span> centre_of_extent <span class="sc">|&gt;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_nearest_feature</span>(pts)</span>
@@ -538,12 +538,13 @@ Update History
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">crs</span>(extent)) <span class="sc">|&gt;</span></span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(shp_fname, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># do the interpolation using Sibley's natural neighbours since we have a regular</span></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co"># and relatively dense array and save it to a tif</span></span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>tif_fname <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_temp/travel_time.tif"</span>)</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="fu">wbt_natural_neighbour_interpolation</span>(shp_fname, <span class="at">field =</span> <span class="st">"time_hrs"</span>,</span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">output =</span> tif_fname, </span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">base =</span> <span class="fu">str_glue</span>(dem_file))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="co"># note that interpolation is required because we are using hexagonal grid cells</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co"># do interpolation using Sibley's natural neighbours since we have a regular</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="co"># and relatively dense array and save it to a tif</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>tif_fname <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_temp/travel_time.tif"</span>)</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="fu">wbt_natural_neighbour_interpolation</span>(shp_fname, <span class="at">field =</span> <span class="st">"time_hrs"</span>,</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">output =</span> tif_fname, </span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">base =</span> <span class="fu">str_glue</span>(dem_file))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Reading the exported raster layer made by <code>whitebox::wbt_natural_neighbour_interpolation</code> back in we get a map of estimated travel times.</p>
 <div class="cell">
@@ -991,7 +992,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","loop":false,"descPosition":"bottom","selector":".lightbox"});
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","selector":".lightbox","loop":false,"closeEffect":"zoom","descPosition":"bottom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
