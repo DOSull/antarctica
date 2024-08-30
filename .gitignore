@@ -9,6 +9,7 @@ from-quantarctica/
 GPS-1516Season-MiersValley/
 temp/
 _temp/
+_dev/
 .Rproj.user
 .RData
 .Rhistory

@@ -66,6 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
+<link href="../notebooks/06-a-hiking-network-with-better-data.html" rel="next">
 <link href="../notebooks/04-building-a-hiking-network.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
@@ -189,6 +190,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">Exploring hiking network options</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/06-a-hiking-network-with-better-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A hiking network with better data</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -293,7 +300,7 @@ Update History
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/raster-to-graph-functions.R"</span>))</span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>base_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>base_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/testing"</span>)</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>input_folder <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{base_folder}/input"</span>)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>output_folder <span class="ot">&lt;-</span>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output"</span>)</span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>basename <span class="ot">&lt;-</span>       <span class="st">"dry-valleys-10m"</span></span>
@@ -987,10 +994,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="../notebooks/06-a-hiking-network-with-better-data.html" class="pagination-link" aria-label="A hiking network with better data">
+        <span class="nav-page-text">A hiking network with better data</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","closeEffect":"zoom","openEffect":"zoom","loop":false,"descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","closeEffect":"zoom","loop":false,"selector":".lightbox","openEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

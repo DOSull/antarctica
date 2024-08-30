@@ -152,6 +152,12 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">Exploring hiking network options</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/06-a-hiking-network-with-better-data.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">A hiking network with better data</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -160,7 +166,19 @@ ul.task-list li input[type="checkbox"] {
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data-sources" id="toc-data-sources" class="nav-link active" data-scroll-target="#data-sources">Data sources</a>
+  <ul class="collapse">
+  <li><a href="#elevation-data" id="toc-elevation-data" class="nav-link" data-scroll-target="#elevation-data">Elevation data</a></li>
+  <li><a href="#rock-outcrops" id="toc-rock-outcrops" class="nav-link" data-scroll-target="#rock-outcrops">Rock outcrops</a></li>
+  <li><a href="#geology" id="toc-geology" class="nav-link" data-scroll-target="#geology">Geology</a></li>
+  <li><a href="#lakes" id="toc-lakes" class="nav-link" data-scroll-target="#lakes">Lakes</a></li>
+  </ul></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -236,15 +254,15 @@ Update History
 </div>
 <p>Will keep this page updated as we go.</p>
 <ol type="1">
-<li><strong>Localised hiking functions</strong> – working on this
+<li><strong>Localised hiking functions</strong>
 <ul>
-<li>Derive from the GPS data</li>
+<li>Derive from the GPS data — essentially DONE</li>
 </ul></li>
 <li><strong>Make a hiking network</strong> – can do this in principle, but resolution to be agreed, and landcover costs determined
 <ul>
-<li>Use Tobler function for now (see 5. below for more).</li>
-<li>Network to be based on hexagonal grid of points, not raster (put this functionality in the R function script, i.e.&nbsp;generate the hex array in R, not Q or an external tool)</li>
+<li>Network to be based on hexagonal grid of points, not raster (put this functionality in the R function script, i.e.&nbsp;generate the hex array in R, not Q or an external tool) — DONE</li>
 <li>Cover types important - can we assume all the same? Apart from obvious ice?</li>
+<li>Improve the input data using additional sources</li>
 </ul></li>
 <li><strong>Select a set of central places</strong>
 <ul>
@@ -260,8 +278,29 @@ Update History
 <li>how well do these match the GPS data?</li>
 </ul></li>
 </ol>
+<section id="data-sources" class="level2">
+<h2 class="anchored" data-anchor-id="data-sources">Data sources</h2>
+<section id="elevation-data" class="level3">
+<h3 class="anchored" data-anchor-id="elevation-data">Elevation data</h3>
+<p>Howat, Ian, et al., 2022, “The Reference Elevation Model of Antarctica – Mosaics, Version 2”, https://doi.org/10.7910/DVN/EBW8UC, Harvard Dataverse, V1, Accessed: 28-29 August 2024. Downloaded from ftp.data.pgc.umn.edu at 10 and 32m resolutions.</p>
+</section>
+<section id="rock-outcrops" class="level3">
+<h3 class="anchored" data-anchor-id="rock-outcrops">Rock outcrops</h3>
+<p>Gerrish, L. (2020). Automatically extracted rock outcrop dataset for Antarctica (7.3) [Data set]. UK Polar Data Centre, Natural Environment Research Council, UK Research &amp; Innovation. https://doi.org/10.5285/178ec50d-1ffb-42a4-a4a3-1145419da2bb</p>
+</section>
+<section id="geology" class="level3">
+<h3 class="anchored" data-anchor-id="geology">Geology</h3>
+<p>From GNS GeoMAP:</p>
+<p>Cox SC, B Smith Lyttle, S Elkind, CS Smith Siddoway, P Morin, G Capponi, T Abu-Alam, M Ballinger, L Bamber, B Kitchener, L Lelli, JF Mawson, A Millikin, N Dal Seno, L Whitburn, T White, A Burton-Johnson, L Crispini, D Elliot, S Elvevold, JW Goodge, JA Halpin, J Jacobs, E Mikhalsky, AP Martin, F Morgan, J Smellie, P Scadden, and GS Wilson. 2023. The GeoMAP (v.2022-08) continent-wide detailed geological dataset of Antarctica.PANGAEA. doi: 10.1594/PANGAEA.951482.</p>
+<p>Downloaded from: https://download.pangaea.de/dataset/951482/files/ATA_SCAR_GeoMAP_v2022_08_QGIS.zip</p>
+</section>
+<section id="lakes" class="level3">
+<h3 class="anchored" data-anchor-id="lakes">Lakes</h3>
+<p>Gerrish, L., Fretwell, P., &amp; Cooper, P. (2020). High resolution Antarctic lakes dataset (7.3) [Data set]. UK Polar Data Centre, Natural Environment Research Council, UK Research &amp; Innovation. https://doi.org/10.5285/6a27ab9e-1258-49b1-bd2c-fcbed310ab45</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
