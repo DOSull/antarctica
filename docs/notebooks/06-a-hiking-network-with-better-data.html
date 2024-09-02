@@ -107,6 +107,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -209,17 +238,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#set-up-folders-and-some-base-parameters" id="toc-set-up-folders-and-some-base-parameters" class="nav-link active" data-scroll-target="#set-up-folders-and-some-base-parameters">Set up folders and some base parameters</a></li>
   <li><a href="#load-the-terrain-and-crop-to-the-extent" id="toc-load-the-terrain-and-crop-to-the-extent" class="nav-link" data-scroll-target="#load-the-terrain-and-crop-to-the-extent">Load the terrain and crop to the extent</a></li>
-  <li><a href="#make-the-graph" id="toc-make-the-graph" class="nav-link" data-scroll-target="#make-the-graph">Make the graph</a>
-  <ul class="collapse">
-  <li><a href="#first-the-nodes" id="toc-first-the-nodes" class="nav-link" data-scroll-target="#first-the-nodes">First the nodes</a></li>
-  <li><a href="#next-build-graph-edges" id="toc-next-build-graph-edges" class="nav-link" data-scroll-target="#next-build-graph-edges">Next build graph edges</a></li>
-  </ul></li>
-  <li><a href="#now-we-have-a-graph" id="toc-now-we-have-a-graph" class="nav-link" data-scroll-target="#now-we-have-a-graph">Now we have a graph</a>
-  <ul class="collapse">
+  <li><a href="#make-the-graph" id="toc-make-the-graph" class="nav-link" data-scroll-target="#make-the-graph">Make the graph</a></li>
+  <li><a href="#now-we-have-a-graph" id="toc-now-we-have-a-graph" class="nav-link" data-scroll-target="#now-we-have-a-graph">Now we have a graph</a></li>
   <li><a href="#shortest-path-tree" id="toc-shortest-path-tree" class="nav-link" data-scroll-target="#shortest-path-tree">Shortest path tree</a></li>
   <li><a href="#betweenness-centralities" id="toc-betweenness-centralities" class="nav-link" data-scroll-target="#betweenness-centralities">Betweenness centralities</a></li>
-  <li><a href="#maps-of-centrality" id="toc-maps-of-centrality" class="nav-link" data-scroll-target="#maps-of-centrality">Maps of centrality</a></li>
-  </ul></li>
+  <li><a href="#maps-of-betweenness-centrality" id="toc-maps-of-betweenness-centrality" class="nav-link" data-scroll-target="#maps-of-betweenness-centrality">Maps of betweenness centrality</a></li>
   </ul>
 </nav>
     </div>
@@ -283,6 +306,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-01</td>
+<td style="text-align: left;">Cleaned up to show the workflow.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-08-29</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -291,7 +318,8 @@ Update History
 </div>
 </div>
 </div>
-<p>Much of this code is in previous notebooks in similar form, but pointing to different data resources.</p>
+<p>The primary purpose of this notebook is to show the overall workflow for making a map of potential impacts from scientists moving around in the Dry Valleys, based on slope, landcover, and hiking function inputs. The workflow is shown with respect to the 5th largest area of contiguous rocky (rocks and/or gravels) cover — an area of about 320 sq.km, at a resolution of 100m.</p>
+<p>Much of this code is in previous notebooks in similar form, but pointing here to different data resources, and once final inputs (primarily landcover costs and a hiking function) are determined, can be automated to run on several zones across all of the Dry Valleys.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -308,32 +336,62 @@ Update History
 </div>
 <section id="set-up-folders-and-some-base-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="set-up-folders-and-some-base-parameters">Set up folders and some base parameters</h2>
+<p>The set up of data subfolders under the top level <code>_data</code> folder is:</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Folder</th>
+<th style="text-align: left;">Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>dry-valleys/output</code></td>
+<td style="text-align: left;">Outputs - primarily the graph and elevation data (as points) with relative movement costs</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>contiguous-geologies</code></td>
+<td style="text-align: left;">GPKG files <code>dry-valleys-extent-??.gpkg</code> with a single contiguous geology polygon per file</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>dry-valleys/common-inputs</code></td>
+<td style="text-align: left;">Various input layers as needed. Primarily relative landcover costs <code>*-cover-costs.gpkg</code></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>dem/10m</code></td>
+<td style="text-align: left;">DEM datasets in <code>raw</code> and <code>clipped</code> (to the Dry Valleys and Skelton basins) and a mosaiced and clipped DEM file <code>dry-valleys-combined-10m-dem-clipped.tif</code></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>dem/32m</code></td>
+<td style="text-align: left;">DEM datasets in <code>raw</code> and <code>clipped</code> (to the Dry Valleys and Skelton basins) and a mosaiced and clipped DEM file <code>dry-valleys-combined-32m-dem-clipped.tif</code></td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, the basename for all files is <code>dry-valleys</code>, with DEM resolution used (<code>32m</code> or <code>10m</code>) and the nominal hiking network resolution (without the <code>m</code>), which is likely to be <code>100</code> included in various output files as appropriate.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dem_resolution <span class="ot">&lt;-</span> <span class="st">"32m"</span>     <span class="co"># 10m also available, but probably not critical</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="dv">200</span>           <span class="co"># 100 is a bit high res for rapid iterating</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>impassable_cost <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">999</span>     <span class="co"># hat-tip to ESRI</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="dv">200</span>           <span class="co"># 100 is high res for rapid iterating: use 200 while testing</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>impassable_cost <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">999</span>     <span class="co"># in the cover-costs file. hat-tip to ESRI</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>contiguous_geology <span class="ot">&lt;-</span> <span class="st">"05"</span>  <span class="co"># small one for testing</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>data_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>base_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dry-valleys"</span>)</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>input_folder <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{base_folder}/common-inputs"</span>)</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>output_folder <span class="ot">&lt;-</span>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>data_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>base_folder <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dry-valleys"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>input_folder <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{base_folder}/common-inputs"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>output_folder <span class="ot">&lt;-</span>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>dem_folder <span class="ot">&lt;-</span>     <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dem/{dem_resolution}"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>basename <span class="ot">&lt;-</span>       <span class="fu">str_glue</span>(<span class="st">"dry-valleys"</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>dem_file <span class="ot">&lt;-</span>       <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dem/{dem_resolution}/combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>landcover_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-cover-costs.gpkg"</span>)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>extent_file <span class="ot">&lt;-</span>    <span class="fu">str_glue</span>(<span class="st">"{base_folder}/contiguous-geologies/{basename}-extent-{contiguous_geology}.gpkg"</span>)</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>hexgrid_file <span class="ot">&lt;-</span> </span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-hex-grid-{resolution}.gpkg"</span>)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   </span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-graph-hex-{resolution}.txt"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>dem_file <span class="ot">&lt;-</span>       <span class="fu">str_glue</span>(<span class="st">"{dem_folder}/{basename}-combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>landcover_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-cover-costs.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-the-terrain-and-crop-to-the-extent" class="level2">
 <h2 class="anchored" data-anchor-id="load-the-terrain-and-crop-to-the-extent">Load the terrain and crop to the extent</h2>
+<p>The extent in each case is a single area of ‘contiguous geology’ derived by dissolving all polygons in the <a href="../notebooks/00-notes.html#geology">GNS geomap data</a>. These files are named <code>*01.gpkg</code>, <code>*02.gpkg</code>, etc., where the sequence number is from the largest to the smallest by area.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>extent <span class="ot">&lt;-</span> <span class="fu">st_read</span>(extent_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `dry-valleys-extent-05' from data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/dry-valleys/contiguous-geologies/dry-valleys-extent-05.gpkg' 
@@ -344,47 +402,89 @@ Dimension:     XY
 Bounding box:  xmin: 424708.9 ymin: -1262612 xmax: 452722.7 ymax: -1233436
 Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>terrain <span class="ot">&lt;-</span> <span class="fu">rast</span>(dem_file) <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crop</span>(extent <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mask</span>(extent <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and for visualization</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>shade <span class="ot">&lt;-</span> <span class="fu">get_hillshade</span>(terrain)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It’s handy to make a couple of basemaps here</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(shade) <span class="sc">+</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotation_scale</span>(<span class="at">plot_unit =</span> <span class="st">"m"</span>, <span class="at">height =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">"cm"</span>)) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># this is a bit goofy, but seems to work</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>contours <span class="ot">&lt;-</span> <span class="cf">function</span>(terrain) {</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_contour</span>(<span class="at">data =</span> terrain <span class="sc">|&gt;</span> <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> <span class="fu">rename</span>(<span class="at">z =</span> <span class="fu">names</span>(terrain)),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>               <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">z =</span> z), <span class="at">binwidth =</span> <span class="dv">100</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>, <span class="at">colour =</span> <span class="st">"#ddaa44"</span>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span> </span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contours</span>(terrain) <span class="sc">+</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-4-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
+</div>
+</div>
 </div>
 </section>
 <section id="make-the-graph" class="level2">
 <h2 class="anchored" data-anchor-id="make-the-graph">Make the graph</h2>
-<section id="first-the-nodes" class="level3">
-<h3 class="anchored" data-anchor-id="first-the-nodes">First the nodes</h3>
+<p>Nodes in the graph are centres of a hexagonal grid across the extent. The cell size of the hexagonal grid is set so that hexagons are the same area as square raster cells of side length given by <code>resolution</code>. The area of these is <span class="math inline">\(r^2\)</span>. The area of a hexagon with ‘radius’ <span class="math inline">\(R\)</span> is <span class="math inline">\(3\sqrt{3}R^2/2\)</span>. Cell size in <code>sf::st_make_grid</code> is specified by the ‘face-to-face distance’ of the hexagons, this distance is given by <span class="math inline">\(D=\sqrt{3}R\)</span>, so <span class="math inline">\(R=D/\sqrt{3}\)</span>. Hence <span class="math display">\[
+\begin{array}{rcrcl}
+A &amp; = &amp; \frac{3\sqrt{3}}{2}\left(\frac{D}{\sqrt{3}}\right)^2 &amp;=&amp; r^2 \\
+&amp; &amp; D^2 &amp; = &amp; \frac{2}{\sqrt{3}}r^2 \\
+&amp; &amp; &amp; = &amp; r\sqrt{\frac{2}{\sqrt{3}}}
+\end{array}
+\]</span> So make a hex grid of points with this spacing.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate hexagon spacing of equivalent area</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> resolution <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">3</span>))</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(hexgrid_file)) {</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> <span class="fu">st_read</span>(hexgrid_file)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  xy  <span class="ot">&lt;-</span> extent <span class="sc">|&gt;</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_grid</span>(<span class="at">cellsize =</span> hex_cell_spacing, <span class="at">what =</span> <span class="st">"centers"</span>, <span class="at">square =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>() <span class="sc">|&gt;</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_set_crs</span>(<span class="fu">st_crs</span>(extent))</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  xy <span class="sc">|&gt;</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_glue</span>(hexgrid_file), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate hexagon spacing of equivalent area</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> resolution <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">3</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># check if we have already made this dataset</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>hexgrid_file <span class="ot">&lt;-</span> </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-hex-grid-{resolution}.gpkg"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(hexgrid_file)) {</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> <span class="fu">st_read</span>(hexgrid_file)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  xy  <span class="ot">&lt;-</span> extent <span class="sc">|&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_grid</span>(<span class="at">cellsize =</span> hex_cell_spacing, <span class="at">what =</span> <span class="st">"centers"</span>, <span class="at">square =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">geometry =</span> x) <span class="sc">|&gt;</span>   <span class="co"># shouldsee https://github.com/r-spatial/sf/issues/2429</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_set_crs</span>(<span class="fu">st_crs</span>(extent))</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  coords <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span> <span class="fu">st_coordinates</span>()</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">x =</span> coords[, <span class="dv">1</span>], <span class="at">y =</span> coords[, <span class="dv">2</span>])</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  xy <span class="sc">|&gt;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_glue</span>(hexgrid_file), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `dry-valleys-05-32m-hex-grid-200' from data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/dry-valleys/output/dry-valleys-05-32m-hex-grid-200.gpkg' 
   using driver `GPKG'
-Simple feature collection with 20777 features and 0 fields
+Simple feature collection with 20777 features and 2 fields
 Geometry type: POINT
 Dimension:     XY
 Bounding box:  xmin: 424601.4 ymin: -1262612 xmax: 452755.2 ymax: -1233391
 Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> terrain <span class="sc">|&gt;</span> </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">extract</span>(xy <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>), <span class="at">method =</span> <span class="st">"bilinear"</span>)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># remove any NAs that might result from interpolation or impassable terrain</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># NAs tend to occur around the edge of study area</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>cover <span class="ot">&lt;-</span> <span class="fu">st_read</span>(landcover_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Attach elevation values to it from the <code>terrain</code> data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> terrain <span class="sc">|&gt;</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  terra<span class="sc">::</span><span class="fu">extract</span>(xy <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>), <span class="at">method =</span> <span class="st">"bilinear"</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> z[, <span class="dv">2</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Also attach land cover relative movement costs, removing any NAs that might have been picked up along the way. These will predominantly be due to minor mismatches between the extent of the raster terrain layer and the coverage of the hexagonal grid of points. We also remove any points whose <code>cost</code> is equal to the sentinel value for impassable terrain (water and ice).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove any NAs that might result from interpolation or impassable terrain</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># NAs tend to occur around the edge of study area</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>cover <span class="ot">&lt;-</span> <span class="fu">st_read</span>(landcover_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Reading layer `dry-valleys-cover-costs' from data source 
   `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/dry-valleys/common-inputs/dry-valleys-cover-costs.gpkg' 
@@ -395,234 +495,246 @@ Dimension:     XY
 Bounding box:  xmin: 273293.4 ymin: -1519422 xmax: 547848.3 ymax: -1128897
 Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> z[, <span class="dv">2</span>]) <span class="sc">|&gt;</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(cover) <span class="sc">|&gt;</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(z), cost <span class="sc">!=</span> impassable_cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> pts <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(cover) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(z), cost <span class="sc">!=</span> impassable_cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-<section id="next-build-graph-edges" class="level3">
-<h3 class="anchored" data-anchor-id="next-build-graph-edges">Next build graph edges</h3>
-<p>This is by connecting any within range of one another (note 1.1 factor to catch floating-point near misses).</p>
+<p>Mapping it we can see that more difficult terrain is associated with the higher elevations (which are rocky).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(graph_file)) {</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">read_graph</span>(graph_file) </span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">graph_from_points</span>(pts, hex_cell_spacing <span class="sc">*</span> <span class="fl">1.1</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_graph</span>(G, graph_file)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>xyz <span class="ot">&lt;-</span> <span class="fu">extract_xyz_from_points</span>(pts)</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="co"># note... for now this uses a default Tobler hiking function</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, xyz, <span class="at">impedances =</span> pts<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> pts, <span class="fu">aes</span>(<span class="at">colour =</span> cost), <span class="at">size =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contours</span>(terrain) <span class="sc">+</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-8-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></a></p>
+</figure>
 </div>
-</section>
+</div>
+</div>
+<p>Now we make the graph by connecting pairs of points within range of one another (note 1.1 factor to catch floating-point near misses).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-graph-hex-{resolution}.txt"</span>) </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(graph_file)) {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">read_graph</span>(graph_file) </span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">graph_from_points</span>(pts, hex_cell_spacing <span class="sc">*</span> <span class="fl">1.1</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_graph</span>(G, graph_file)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># note... for now this uses a default Tobler hiking function</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, <span class="at">xyz =</span> pts, <span class="at">impedances =</span> pts<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 </section>
 <section id="now-we-have-a-graph" class="level2">
 <h2 class="anchored" data-anchor-id="now-we-have-a-graph">Now we have a graph</h2>
-<p>So let’s take a look…</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># make a hillshade 'basemap'</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="ot">&lt;-</span> <span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade <span class="sc">|&gt;</span> <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>              <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotation_scale</span>(<span class="at">plot_unit =</span> <span class="st">"m"</span>, <span class="at">height =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">"cm"</span>)) <span class="sc">+</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
-<p>A map of the network for reassurance - noting that since costs are different in each direction there’s no easy way to show this unambiguously</p>
+<p>So let’s take a look… first, at a map of the network for reassurance - noting that since costs are different in each direction there’s no easy way to show this unambiguously</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> G <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>(), <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">log</span>(cost)), <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> G <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>(), </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">log</span>(cost)), <span class="at">linewidth =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-7-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-10-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></a></p>
 </figure>
 </div>
 </div>
 </div>
-<p>And just for assurance, here’s an estimated travel time map.</p>
+<p>And just for assurance, here’s an estimated travel time map. These are actually tricky to make because</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># make an arbitrary 'centre' point as origin point for some examples</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>centre_of_extent <span class="ot">&lt;-</span> extent <span class="sc">|&gt;</span> </span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_point_on_surface</span>()</span>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pick a random point as origin point for some examples</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>origin_i <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq_along</span>(pts<span class="sc">$</span>geom), <span class="dv">1</span>)[<span class="dv">1</span>]</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>origin <span class="ot">&lt;-</span> <span class="fu">c</span>(pts<span class="sc">$</span>x[origin_i], pts<span class="sc">$</span>y[origin_i])</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>origin_i <span class="ot">&lt;-</span> centre_of_extent <span class="sc">|&gt;</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_nearest_feature</span>(pts)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">V</span>(G)<span class="sc">$</span>time_hrs <span class="ot">&lt;-</span> <span class="fu">distances</span>(G, <span class="at">v =</span> <span class="fu">c</span>(<span class="fu">V</span>(G)[origin_i]), <span class="at">weights =</span> <span class="fu">edge_attr</span>(G, <span class="st">"cost"</span>)) <span class="sc">|&gt;</span> <span class="fu">t</span>()</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># assemble results into a DF</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="fu">V</span>(G)<span class="sc">$</span>x, <span class="at">y =</span> <span class="fu">V</span>(G)<span class="sc">$</span>y, <span class="at">z =</span> <span class="fu">V</span>(G)<span class="sc">$</span>z, </span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                 <span class="at">time_hrs =</span> <span class="fu">V</span>(G)<span class="sc">$</span>time_hrs, </span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                 <span class="at">cost =</span> <span class="fu">rep</span>(<span class="dv">1</span>, <span class="fu">nrow</span>(pts)))</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># write this out to a shapefile, which Whitebox Tools needs</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>shp_fname <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_temp/test-{format(origin_i, scientific = FALSE)}-hex.shp"</span>)</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span> <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"x"</span>, <span class="st">"y"</span>), <span class="at">crs =</span> <span class="fu">crs</span>(extent)) <span class="sc">|&gt;</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_write</span>(shp_fname, <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co"># do the interpolation using Sibley's natural neighbours since we have a regular</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># and relatively dense array and save it to a tif</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>tif_fname <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_temp/travel_time.tif"</span>)</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="fu">wbt_natural_neighbour_interpolation</span>(shp_fname, <span class="at">field =</span> <span class="st">"time_hrs"</span>,</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">output =</span> tif_fname, </span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">base =</span> <span class="fu">str_glue</span>(dem_file))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>Reading the exported raster layer made by <code>whitebox::wbt_natural_neighbour_interpolation</code> back in we get a map of estimated travel times.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rast</span>(tif_fname) <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mask</span>(extent <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y)) <span class="sc">+</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="fu">aes</span>(<span class="at">fill =</span> travel_time)) <span class="sc">+</span></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">name =</span> <span class="st">"Est. time hrs"</span>) <span class="sc">+</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotation_scale</span>(<span class="at">plot_unit =</span> <span class="st">"m"</span>, <span class="at">height =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">"cm"</span>)) <span class="sc">+</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">V</span>(G)<span class="sc">$</span>time_hrs <span class="ot">&lt;-</span> <span class="fu">distances</span>(G, <span class="at">v =</span> <span class="fu">c</span>(<span class="fu">V</span>(G)[origin_i]), </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                           <span class="at">weights =</span> <span class="fu">edge_attr</span>(G, <span class="st">"cost"</span>)) <span class="sc">|&gt;</span> <span class="fu">t</span>()</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">vertex.attributes</span>(G) <span class="sc">|&gt;</span> <span class="fu">as.data.frame</span>()</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> df, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">colour =</span> time_hrs), <span class="at">size =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"point"</span>, <span class="at">x =</span> origin[<span class="dv">1</span>], <span class="at">y =</span> origin[<span class="dv">2</span>], <span class="at">pch =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-9-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-11-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></a></p>
 </figure>
 </div>
 </div>
 </div>
-<section id="shortest-path-tree" class="level3">
-<h3 class="anchored" data-anchor-id="shortest-path-tree">Shortest path tree</h3>
-<p>Starting from a given vertex we can make a tree graph which shows all the shortest paths from that site to every other site in the graph. This is not a built-in <code>igraph</code> function. A function in <code>raster-to-graph-functions.R</code> builds one for us.</p>
+<p>Note the following, if we want the estimated travel times as a raster layer rather than a point dataset, where we use Sibley’s natural neighbours interpolation method from <code>whitebox_tools</code> to interpolate to a raster from the hex grid distributed points.</p>
+<p>[NOT RUN]</p>
+<pre><code># filenames for (temporary) shapefile and TIF outputs that we need 
+shp_fname &lt;- str_glue("{here()}/_temp/test-{format(origin_i, scientific = FALSE)}-hex.shp")
+tif_fname &lt;- str_glue("{here()}/_temp/travel_time.tif")
+
+# write the df out to a shapefile, which Whitebox Tools needs
+df |&gt; st_as_sf(coords = c("x", "y"), crs = crs(extent)) |&gt;
+  st_write(shp_fname, delete_dsn = TRUE)
+
+# do the interpolation using Sibley's natural neighbours since we have a regular
+# and relatively dense array and save it to a tif
+wbt_natural_neighbour_interpolation(
+  shp_fname, output = tif_fname, field = "time_hrs", base = str_glue(dem_file))
+
+rast(tif_fname) |&gt;
+  mask(extent |&gt; as("SpatVector")) |&gt;
+  as.data.frame(xy = TRUE) |&gt;
+  ggplot(aes(x = x, y = y)) +
+  geom_raster(aes(fill = travel_time)) +
+  scale_fill_viridis_c(option = "A", direction = -1, name = "Est. time hrs") +
+  coord_equal() +
+  annotation_scale(plot_unit = "m", height = unit(0.1, "cm")) +
+  theme_void()</code></pre>
+</section>
+<section id="shortest-path-tree" class="level2">
+<h2 class="anchored" data-anchor-id="shortest-path-tree">Shortest path tree</h2>
+<p>This is more for fun that useful – although given a set of heavily used sites (base camps?) their shortest path trees might usefully be combined to give a general idea of most at-risk / heavily travelled areas. Note that <code>shortest_path_tree</code> is a function in <code>raster-graph-functions.R</code> not an <code>igraph</code> built-in.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>SPT <span class="ot">&lt;-</span> G <span class="sc">|&gt;</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_shortest_path_tree</span>(origin_i) <span class="sc">|&gt;</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_graph_as_line_layer</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span> </span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> SPT, <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> pts <span class="sc">|&gt;</span> <span class="fu">slice</span>(origin_i), <span class="at">pch =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">contours</span>(terrain) <span class="sc">+</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> SPT, <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> pts <span class="sc">|&gt;</span> <span class="fu">slice</span>(origin_i), <span class="at">pch =</span> <span class="dv">4</span>) <span class="sc">+</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-11-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></a></p>
 </figure>
 </div>
 </div>
 </div>
-<p>This shows all the potential most efficient pathways out from the root vertex to every other vertex.</p>
+<p>This shows all the potential most efficient pathways out from the root vertex to every other vertex. There is a strong tendency for these paths to follow contours.</p>
 </section>
-<section id="betweenness-centralities" class="level3">
-<h3 class="anchored" data-anchor-id="betweenness-centralities">Betweenness centralities</h3>
-<p>It turns out we can count all the appearances of graph edges and/or vertices in all the shortest paths among all the vertices in a network. This are graph centrality measures termed <em>edge betweenness</em> and <em>vertex betweenness</em> (the latter is often simply <em>betweenness</em>).</p>
+<section id="betweenness-centralities" class="level2">
+<h2 class="anchored" data-anchor-id="betweenness-centralities">Betweenness centralities</h2>
+<p>It turns out we can count all the appearances of graph edges and/or vertices in all the shortest paths among all the vertices in a network. These are graph centrality measures termed <em>edge betweenness</em> and <em>vertex betweenness</em> (the latter is often simply <em>betweenness</em>).</p>
+<p>If we use these in their ‘raw’ form then the most geographically central spots in a study area may have the highest values by virtue of their location in the middle of the area. This might not be wrong — not exactly anyway — but it might lead to ignoring relatively vulnerable areas that may be heavily travelled in spite of more peripheral locations because they are at bottlenecks between parts of the study area. For this reason we calculate a <code>base-</code> and <code>cost-</code> betweenness scores. The former is the betweenness if the cost of traversing every edge in the graph was equal’ the latter is when slope and terrain are taken into account.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># scale relative to betweenness if all edges are equal cost to offset edge effects</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>base_eb <span class="ot">&lt;-</span> <span class="fu">edge_betweenness</span>(G)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>cost_eb <span class="ot">&lt;-</span> <span class="fu">edge_betweenness</span>(G, <span class="at">weights =</span> <span class="fu">E</span>(G)<span class="sc">$</span>cost)</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>diff_eb <span class="ot">&lt;-</span> (cost_eb <span class="sc">-</span> base_eb) <span class="sc">/</span> (cost_eb <span class="sc">+</span> base_eb)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>rel_eb <span class="ot">&lt;-</span> cost_eb <span class="sc">/</span> base_eb</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>log_rel_eb <span class="ot">&lt;-</span> <span class="fu">log</span>(rel_eb, <span class="dv">10</span>)</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>Gsp <span class="ot">&lt;-</span> G <span class="sc">|&gt;</span> </span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"base_eb"</span>, <span class="at">value =</span> base_eb) <span class="sc">|&gt;</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"cost_eb"</span>, <span class="at">value =</span> cost_eb) <span class="sc">|&gt;</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"diff_eb"</span>, <span class="at">value =</span> diff_eb) <span class="sc">|&gt;</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"rel_eb"</span>, <span class="at">value =</span> rel_eb) <span class="sc">|&gt;</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"log_rel_eb"</span>, <span class="at">value =</span> log_rel_eb)</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co"># add 1 to these to make it easier to scale them if needed because a raw value 0 is possible</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>base_vb <span class="ot">&lt;-</span> <span class="fu">betweenness</span>(G) <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>cost_vb <span class="ot">&lt;-</span> <span class="fu">betweenness</span>(G, <span class="at">weights =</span> <span class="fu">E</span>(G)<span class="sc">$</span>cost) <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>diff_vb <span class="ot">&lt;-</span> (cost_vb <span class="sc">-</span> base_vb) <span class="sc">/</span> (cost_vb <span class="sc">+</span> base_vb)</span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>rel_vb <span class="ot">&lt;-</span> cost_vb <span class="sc">/</span> base_vb</span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>log_rel_vb <span class="ot">&lt;-</span> <span class="fu">log</span>(rel_vb)</span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>Gsp <span class="ot">&lt;-</span> Gsp <span class="sc">|&gt;</span> </span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"base_vb"</span>, <span class="at">value =</span> base_vb) <span class="sc">|&gt;</span></span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"cost_vb"</span>, <span class="at">value =</span> cost_vb) <span class="sc">|&gt;</span></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"diff_vb"</span>, <span class="at">value =</span> diff_vb) <span class="sc">|&gt;</span></span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"rel_vb"</span>, <span class="at">value =</span> rel_vb) <span class="sc">|&gt;</span></span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"log_rel_vb"</span>, <span class="at">value =</span> log_rel_vb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># vertices</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># add 1 to these to make it easier to scale them if needed because a raw value 0 is possible</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>base_vb <span class="ot">&lt;-</span> <span class="fu">betweenness</span>(G) <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>cost_vb <span class="ot">&lt;-</span> <span class="fu">betweenness</span>(G, <span class="at">weights =</span> <span class="fu">E</span>(G)<span class="sc">$</span>cost) <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>diff_vb <span class="ot">&lt;-</span> (cost_vb <span class="sc">-</span> base_vb) <span class="sc">/</span> (cost_vb <span class="sc">+</span> base_vb)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>rel_vb <span class="ot">&lt;-</span> cost_vb <span class="sc">/</span> base_vb</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>log_rel_vb <span class="ot">&lt;-</span> <span class="fu">log</span>(rel_vb)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>Gsp <span class="ot">&lt;-</span> G <span class="sc">|&gt;</span> </span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"base_vb"</span>, <span class="at">value =</span> base_vb) <span class="sc">|&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"cost_vb"</span>, <span class="at">value =</span> cost_vb) <span class="sc">|&gt;</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"diff_vb"</span>, <span class="at">value =</span> diff_vb) <span class="sc">|&gt;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"rel_vb"</span>, <span class="at">value =</span> rel_vb) <span class="sc">|&gt;</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_vertex_attr</span>(<span class="st">"log_rel_vb"</span>, <span class="at">value =</span> log_rel_vb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># edges</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>base_eb <span class="ot">&lt;-</span> <span class="fu">edge_betweenness</span>(G)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>cost_eb <span class="ot">&lt;-</span> <span class="fu">edge_betweenness</span>(G, <span class="at">weights =</span> <span class="fu">E</span>(G)<span class="sc">$</span>cost)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>diff_eb <span class="ot">&lt;-</span> (cost_eb <span class="sc">-</span> base_eb) <span class="sc">/</span> (cost_eb <span class="sc">+</span> base_eb)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>rel_eb <span class="ot">&lt;-</span> cost_eb <span class="sc">/</span> base_eb</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>log_rel_eb <span class="ot">&lt;-</span> <span class="fu">log</span>(rel_eb, <span class="dv">10</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>Gsp <span class="ot">&lt;-</span> Gsp <span class="sc">|&gt;</span> </span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"base_eb"</span>, <span class="at">value =</span> base_eb) <span class="sc">|&gt;</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"cost_eb"</span>, <span class="at">value =</span> cost_eb) <span class="sc">|&gt;</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"diff_eb"</span>, <span class="at">value =</span> diff_eb) <span class="sc">|&gt;</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"rel_eb"</span>, <span class="at">value =</span> rel_eb) <span class="sc">|&gt;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_edge_attr</span>(<span class="st">"log_rel_eb"</span>, <span class="at">value =</span> log_rel_eb)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="maps-of-centrality" class="level3">
-<h3 class="anchored" data-anchor-id="maps-of-centrality">Maps of centrality</h3>
-<p>First vertex centrality, where it is relatively simple to colour vertices by their centrality.</p>
+<section id="maps-of-betweenness-centrality" class="level2">
+<h2 class="anchored" data-anchor-id="maps-of-betweenness-centrality">Maps of betweenness centrality</h2>
+<p>First vertex centrality, where it is relatively simple to colour vertices by their centrality. It is useful to map all the various calculated betweenness measures to get a feel for which may be most useful.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> cost_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Vertex betweenness centrality, raw scores"</span>) <span class="sc">+</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">colour =</span> <span class="st">"none"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> base_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> cost_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> diff_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_distiller</span>(<span class="at">palette =</span> <span class="st">"RdBu"</span>) </span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>m4 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> rel_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>m5 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>(),</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> log_rel_vb), <span class="at">size =</span> <span class="fl">0.02</span>) <span class="sc">+</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a><span class="fu">ggarrange</span>(<span class="at">plotlist =</span> <span class="fu">list</span>(m1, m2, m3, m4, m5), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-13-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-16-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></a></p>
 </figure>
 </div>
 </div>
 </div>
+<p>Examining these results, it appears that the the simple <code>cost_vb</code> betweenness may actually be the most useful in revealing routes likely to be well trafficked. The <code>diff_vb</code> output also appears likely to be useful.</p>
+<p>Edge centrality is trickier to map (because of how the <code>linewidth</code> aesthetic works).</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_point_layer</span>() <span class="sc">|&gt;</span> <span class="fu">filter</span>(log_rel_vb <span class="sc">&gt;=</span> <span class="dv">0</span>),</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> log_rel_vb), <span class="at">size =</span> <span class="fl">0.015</span>) <span class="sc">+</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">colour =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Vertex betweenness centrality, standardised by expected"</span>) <span class="sc">+</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>m1 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>() <span class="sc">|&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">lwd =</span> base_eb <span class="sc">/</span> <span class="fu">max</span>(<span class="fu">E</span>(Gsp)<span class="sc">$</span>base_eb)),</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> base_eb, <span class="at">linewidth =</span> lwd)) <span class="sc">+</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linewidth_identity</span>()</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>() <span class="sc">|&gt;</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">lwd =</span> cost_eb <span class="sc">/</span> <span class="fu">max</span>(<span class="fu">E</span>(Gsp)<span class="sc">$</span>cost_eb)),</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> cost_eb, <span class="at">linewidth =</span> lwd)) <span class="sc">+</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linewidth_identity</span>()</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>m3 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>(),</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> diff_eb), <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_distiller</span>(<span class="at">palette =</span> <span class="st">"RdBu"</span>) </span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>m4 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>(),</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> rel_eb), <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_distiller</span>(<span class="at">palette =</span> <span class="st">"RdBu"</span>) </span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>m5 <span class="ot">&lt;-</span> hillshade_basemap <span class="sc">+</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> <span class="fu">get_graph_as_line_layer</span>(),</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">colour =</span> log_rel_eb), <span class="at">linewidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_distiller</span>(<span class="at">palette =</span> <span class="st">"RdBu"</span>) </span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a><span class="fu">ggarrange</span>(<span class="at">plotlist =</span> <span class="fu">list</span>(m1, m2, m3, m4, m5), <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">nrow =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-14-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></a></p>
+<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-17-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="672"></a></p>
 </figure>
 </div>
 </div>
 </div>
-<p>Edge centrality is fiddlier to map (because of how the linewidth aesthetic works).</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> </span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">get_graph_as_line_layer</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>            <span class="co"># filter(log_rel_eb &gt; 0) |&gt;</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">lwd =</span> cost_eb <span class="sc">/</span> (<span class="fu">max</span>(<span class="fu">E</span>(Gsp)<span class="sc">$</span>cost_eb))),</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">linewidth =</span> lwd)) <span class="sc">+</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linewidth_identity</span>() <span class="sc">+</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Edge betweenness centrality, raw scores"</span>) <span class="sc">+</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-15-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></a></p>
-</figure>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> Gsp <span class="sc">|&gt;</span> </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>            <span class="fu">get_graph_as_line_layer</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>            <span class="fu">filter</span>(log_rel_eb <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">|&gt;</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">lwd =</span> log_rel_eb <span class="sc">/</span> <span class="dv">5</span>),</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>          <span class="fu">aes</span>(<span class="at">linewidth =</span> lwd)) <span class="sc">+</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_linewidth_identity</span>() <span class="sc">+</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Edge betweenness centrality, standardised by expected"</span>) <span class="sc">+</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><a href="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-16-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="06-a-hiking-network-with-better-data_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></a></p>
-</figure>
-</div>
-</div>
-</div>
+<p>Here, it seems clear that the <code>cost_eb</code> is likely to be the most useful output.</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -1045,7 +1157,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","loop":false,"selector":".lightbox","descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom","loop":false});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
