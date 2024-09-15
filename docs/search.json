@@ -33,6 +33,61 @@
     ]
   },
   {
+    "objectID": "notebooks/08-taking-stock.html",
+    "href": "notebooks/08-taking-stock.html",
+    "title": "Taking stock",
+    "section": "",
+    "text": "Update History\n\n\n\n\n\n\n\n\nDate\nChanges\n\n\n\n\n2024-08-29\nInitial post.\nThis notebook sets out progress to date.\nCode\nlibrary(here)\nlibrary(stringr)\nlibrary(ggplot2)\nlibrary(ggnewscale)\nlibrary(whitebox)\nlibrary(ggpubr)\nlibrary(ggspatial)\nlibrary(tmap)\n\nsource(str_glue(\"{here()}/scripts/raster-to-graph-functions.R\"))\nbase_folder &lt;- here()\ndata_folder &lt;- str_glue(\"{base_folder}/_data\")\ndem_folder  &lt;- str_glue(\"{base_folder}/_data/dem\")",
+    "crumbs": [
+      "Notebooks",
+      "Taking stock"
+    ]
+  },
+  {
+    "objectID": "notebooks/08-taking-stock.html#definition-of-the-study-area",
+    "href": "notebooks/08-taking-stock.html#definition-of-the-study-area",
+    "title": "Taking stock",
+    "section": "Definition of the study area",
+    "text": "Definition of the study area\nI’ve settled on two ‘basins’, Skelton and Dry Valleys, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project, downloadable from here.1\n\n\nCode\ncoastline &lt;- st_read(str_glue(\"{data_folder}/coastline.gpkg\"))\nbasins &lt;- st_read(str_glue(\"{dem_folder}/antarctic-basins.gpkg\"))\nstudy_basins &lt;- st_read(str_glue(\"{dem_folder}/dry-valleys-and-skelton.gpkg\"))\nstudy_area &lt;- st_read(str_glue(\"{dem_folder}/study-area-extent.gpkg\"))\ngps_data &lt;- st_read(str_glue(\"{data_folder}/cleaned-gps-data/all-gps-traces.gpkg\"))\ntiles &lt;- st_read(str_glue(\"{dem_folder}/REMA-index-included-tiles.gpkg\"))\nshade &lt;- rast(str_glue(\"{dem_folder}/32m/dry-valleys-combined-32m-browse.tif\"))\nshade8 &lt;- shade |&gt;\n  terra::aggregate(8) |&gt;\n  as.data.frame(xy = TRUE) |&gt;\n  rename(shade = `15_35_32m_v2.0_browse`)\ngeology &lt;- st_read(str_glue(\"{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg\"))\ncontiguous_geologies &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/common-inputs/contiguous-geologies.gpkg\"))\n\n\n\n\nCode\nbb &lt;- st_bbox(study_area)\nggplot() +\n  geom_sf(data = basins) + \n  geom_sf(data = coastline, colour = \"#5588aa\", fill = \"#00000000\") +\n  geom_sf(data = study_area, fill = \"#666666\", colour = \"white\") +\n  annotate(\"rect\", xmin = bb[1], ymin = bb[2], xmax = bb[3], ymax = bb[4], fill = \"#00000000\", colour = \"red\") +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\nLooking more closely, Skelton was included in the study area extent because the provided GPS data from the 2015-16 season (shown in red below) extended into this basin in addition the Dry Valleys basin.\n\n\nCode\nggplot() +\n  geom_sf(data = coastline) +\n  geom_sf(data = study_basins, fill = \"grey\", colour = \"white\") +\n  geom_sf(data = gps_data, colour = \"red\", size = 0.025, title = \"GPS data\") +\n  geom_sf_text(data = study_basins, aes(label = NAME)) +\n  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)]) +\n  annotation_scale(height = unit(0.1, \"cm\"), location = \"tr\") +\n  theme_minimal() +\n  theme(axis.title = element_blank())\n\n\n\n\n\n\n\n\n\n\nDEM data\nBased on this study area DEM data was assembled from the REMA project2 downloaded from ftp.data.pgc.umn.edu, using at least to begin the 32m resolution product, extending across tiles as shown below.\n\n\nCode\nggplot() +\n  geom_raster(data = shade8, aes(x = x, y = y, fill = shade), alpha = 0.35) +\n  scale_fill_distiller(palette = \"Blues\", guide = \"none\") +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"red\") +\n  geom_sf(data = tiles, fill = \"#00000000\", colour = \"darkgrey\") +\n  geom_sf_text(data = tiles, aes(label = tile), size = 2.5) +\n  theme_void()",
+    "crumbs": [
+      "Notebooks",
+      "Taking stock"
+    ]
+  },
+  {
+    "objectID": "notebooks/08-taking-stock.html#definition-of-areas-of-interest",
+    "href": "notebooks/08-taking-stock.html#definition-of-areas-of-interest",
+    "title": "Taking stock",
+    "section": "Definition of areas of interest",
+    "text": "Definition of areas of interest\nMuch of the area delineated above is covered in permanent snow and ice. To delineate areas for closer study we use areas of classified geology obtained from the GNS GeoMAP3 and downloaded from here\nThis layer is clipped to the study area extent. Colours in the map below are randomly signed and indicative only.\n\n\nCode\nggplot() + \n  geom_sf(data = geology, aes(fill = SIMPDESC), linewidth = 0) +\n  guides(fill = \"none\") +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"black\") +\n  theme_void()\n\n\n\n\n\n\n\n\n\nThe geology layer serves two purposes:\n\nDelineation of areas of interest: large regions of contiguous geology are chosen as study areas\nEstimation of relative movement costs for building the hiking network\n\n\nAreas of interest\nThe five largest regions of contiguous geology in the study area have been chosen for closer study. These range in extent from almost 2600 to around 320 sq.km.\n\n\nCode\ntop5 &lt;- contiguous_geologies |&gt; arrange(desc(area)) |&gt; slice(1:5)\nbb &lt;- st_bbox(top5)\nggplot() +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"grey\") +\n  geom_sf(data = geology, aes(fill = SIMPDESC), linewidth = 0, alpha = 0.35) +\n  geom_sf(data = contiguous_geologies, fill = \"#00000000\", colour = \"darkgrey\") +\n  geom_sf(data = top5, fill = \"#00000000\", colour = \"black\", linewidth = 0.35) +\n  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)]) +\n  guides(fill = \"none\") +\n  annotation_scale(height = unit(0.1, \"cm\")) +\n  theme_void()\n\n\n\n\n\n\n\n\n\n\n\nRelative movement cost\nFor the time being a very crude relative movement rate classification assigning any geology including the term till a cost 1.5, any containing the term rock a cost 2, and all other areas (water and ice) a null value -999 has been used. Better choices might be 1.19 (or 1.67) for till and 2.5 for rock per values cited in the documentation of the R movecost package, as follows:\n\n\n\n\n\n\n\nCover\nCost\n\n\n\n\nBlacktop roads, improved dirt paths, cement\n1.00\n\n\nLawn grass\n1.03\n\n\nLoose beach sand\n1.19\n\n\nDisturbed ground (former stone quarry)\n1.24\n\n\nHorse riding path, flat trails and meadows\n1.25\n\n\nTall grassland (with thistle and nettles)\n1.35\n\n\nOpen space above the treeline (i.e., 2000 m asl)\n1.50\n\n\nBad trails, stony outcrops and river beds\n1.67\n\n\nOff-paths\n1.67\n\n\nBog\n1.79\n\n\nOff-path areas below the treeline (pastures, forests, heathland)\n2.00\n\n\nRock\n2.50\n\n\nSwamp, water course\n5.00\n\n\n\nThese choices remain open for discussion and adjustment, in combination with determination of localised hiking functions from the provided GPS data.",
+    "crumbs": [
+      "Notebooks",
+      "Taking stock"
+    ]
+  },
+  {
+    "objectID": "notebooks/08-taking-stock.html#current-results-an-example",
+    "href": "notebooks/08-taking-stock.html#current-results-an-example",
+    "title": "Taking stock",
+    "section": "Current results: an example",
+    "text": "Current results: an example\nAn example output for the largest area of interest is shown below.\n\nr1 &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/output/dry-valleys-01-32m-betweenness-100-2.gpkg\"))\nr2 &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/output/dry-valleys-01-32m-betweenness-200-2.gpkg\"))\next &lt;- st_read(str_glue(\"{data_folder}/broken-connection-extent.gpkg\"))\n\n\nggplot() +\n  geom_sf(data = r1, aes(colour = cost_vb), size = 0.025) +\n  scale_colour_viridis_c(option = \"A\", direction = -1) +\n  theme_void()\n\n\n\n\n\n\n\n\nThis result was obtained at nominal resolution of the hiking network 100m. A coarser grained network, nominal resolution 200m yields a similar result\n\nggplot() +\n  geom_sf(data = r2, aes(colour = cost_vb), size = 0.05) +\n  scale_colour_viridis_c(option = \"A\", direction = -1) +\n  geom_sf(data = ext, alpha = 0.35) +\n  theme_void()\n\n\n\n\n\n\n\n\nBoth results were obtained with a betweenness centrality calculation cutoff of 2 hours estimated hiking time. The resulting beweenness measures have been rescaled in both cases to a range between 1 and 100 to enable direct comparison. The distribution of the results in each case is similar, although the finer resolution network yields more strongly concentrated outcomes.\n\n\nCode\ndf &lt;- bind_rows(r1, r2) |&gt;\n  mutate(resolution = as.factor(resolution))\n\nggplot() +\n  geom_density(data = df, aes(x = cost_vb, fill = resolution, group = resolution), linewidth = 0, alpha = 0.5) +\n  xlab(\"Rescaled vertex betweenness\") +\n  ylab(\"Relative frequency\")\n\n\n\n\n\n\n\n\n\nHowever, it is worth noting that there are differences on closer inspection. The area highlighted in the second map above is shown below screenshotted from QGIS.\n\n\n\n\n\n\n\n\n\n\n\n\n\nThere are actually two spots here where the image on the right (200m resolution network) is disconnected relative to the 100m resolution case. Note how the 100m resolution network finds two paths through this region, where the 200m resolution network does not. The second ‘missing’ node is towards the top right of the image.\nIt would not be difficult to fix this by buffering the geology as required, but it may be that such narrow connections are not ‘really’ connections at all…",
+    "crumbs": [
+      "Notebooks",
+      "Taking stock"
+    ]
+  },
+  {
+    "objectID": "notebooks/08-taking-stock.html#footnotes",
+    "href": "notebooks/08-taking-stock.html#footnotes",
+    "title": "Taking stock",
+    "section": "Footnotes",
+    "text": "Footnotes\n\n\nMouginot, J., Scheuchl, B. & Rignot, E. MEaSUREs Antarctic Boundaries for IPY 2007-2009 from Satellite Radar, Version 2. 2017, Distributed by NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/AXE4121732AD. Date Accessed 09-03-2024.↩︎\nHowat, Ian, et al., 2022, “The Reference Elevation Model of Antarctica – Mosaics, Version 2”, https://doi.org/10.7910/DVN/EBW8UC, Harvard Dataverse, V1, Accessed: 28-29 August 2024.↩︎\nCox SC, B Smith Lyttle, S Elkind, CS Smith Siddoway, P Morin, G Capponi, T Abu-Alam, M Ballinger, L Bamber, B Kitchener, L Lelli, JF Mawson, A Millikin, N Dal Seno, L Whitburn, T White, A Burton-Johnson, L Crispini, D Elliot, S Elvevold, JW Goodge, JA Halpin, J Jacobs, E Mikhalsky, AP Martin, F Morgan, J Smellie, P Scadden, and GS Wilson. 2023. The GeoMAP (v.2022-08) continent-wide detailed geological dataset of Antarctica.PANGAEA. doi: 10.1594/PANGAEA.951482.↩︎",
+    "crumbs": [
+      "Notebooks",
+      "Taking stock"
+    ]
+  },
+  {
     "objectID": "notebooks/06-a-hiking-network-with-better-data.html",
     "href": "notebooks/06-a-hiking-network-with-better-data.html",
     "title": "A hiking network with better data",
@@ -198,11 +253,22 @@
     ]
   },
   {
+    "objectID": "notebooks/07-compute-times-of-hiking-network-analysis.html#timings",
+    "href": "notebooks/07-compute-times-of-hiking-network-analysis.html#timings",
+    "title": "Compute times of hiking network analysis",
+    "section": "Timings",
+    "text": "Timings\nThe timing for this small area of interest at these resolutions and cutoff times are tabulated below.\n\ndf &lt;- results |&gt; \n  select(resolution, vb_base_time, vb_cost_time, cutoff) |&gt;\n  distinct() |&gt;\n  pivot_longer(cols = c(vb_base_time, vb_cost_time))\n\nggplot(df) +\n  geom_col(aes(x = cutoff, y = value, group = resolution, fill = resolution), position = \"dodge\") +\n  xlab(\"Betweenness calculation est. hiking time cutoff\") +\n  ylab(\"Time, sec\") +\n  theme_minimal()\n\n\n\n\n\n\n\n\nThis confirms that the time to perform betweenness centrality estimation increases with the square of the number of vertices in the network. The finer resolution network (100m) has four times as many nodes, and analysis takes around 16 times longer (&gt;15 seconds vs ~ 1 second in the cutoff = 5 case).\nWhen no cutoff time is used, the betweenness calculation takes much longer. It is clear from the maps above that the no cutoff case identifies ‘arterials’ although it is unclear that this is the most relevant concern for expected environmental impacts.\nFurther analysis of larger networks (the networks for the largest contiguous region are about 10 times larger than this one) confirms this result, with comparable analyses taking ~100 times longer, which on the computer used (an M2 Mac Mini) translates to several hours compute time for the most extensive betweenness estimation at 100m resolution.\nThese results suggest that it is important to settle on a resolution and cutoff distance judged appropriate for ongoing work to avoid costly repetition of sometimes time-consuming analysis. It is almost certainly preferable to apply some cutoff estimated hiking time to the calculation in any case.",
+    "crumbs": [
+      "Notebooks",
+      "Compute times of hiking network analysis"
+    ]
+  },
+  {
     "objectID": "index.html",
     "href": "index.html",
     "title": "Science impacts on Antarctica",
     "section": "",
-    "text": "A simple website to share ongoing project work on possible impacts of science in Antarctica.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOverview / plan\n\n\nAntarctica Dry Valleys vulnerability to human impacts\n\n\n\n\n\n\n\n\nJul 18, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nExploring GPS data\n\n\nChecking over GPS data for accuracy of speed, etc.\n\n\n\n\n\n\n\n\nJul 16, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nCleaning GPS data\n\n\nAssembling provided GPS data into cleaned files, and a single large dataset\n\n\n\n\n\n\n\n\nJul 17, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nEstimating a hiking function\n\n\nA work in progress…\n\n\n\n\n\n\n\n\nJul 17, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nBuilding a hiking network\n\n\nAlso a work in progress…\n\n\n\n\n\n\n\n\nAug 6, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nExploring hiking network options\n\n\nAlso a work in progress…\n\n\n\n\n\n\n\n\nAug 7, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nA hiking network with better data\n\n\nHoming in on the most useful graph analysis outputs\n\n\n\n\n\n\n\n\nAug 29, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nCompute times of hiking network analysis\n\n\nVarying resolution and cutoff times in centrality analysis\n\n\n\n\n\n\n\n\nSep 3, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nTaking stock\n\n\nProgress to 4 September, 2024\n\n\n\n\n\n\n\n\nSep 4, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\nNo matching items"
+    "text": "A simple website to share ongoing project work on possible impacts of science in Antarctica.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nOverview / plan\n\n\nAntarctica Dry Valleys vulnerability to human impacts\n\n\n\n\n\n\n\n\nJul 18, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nExploring GPS data\n\n\nChecking over GPS data for accuracy of speed, etc.\n\n\n\n\n\n\n\n\nJul 16, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nCleaning GPS data\n\n\nAssembling provided GPS data into cleaned files, and a single large dataset\n\n\n\n\n\n\n\n\nJul 17, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nEstimating a hiking function\n\n\nA work in progress…\n\n\n\n\n\n\n\n\nJul 17, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nBuilding a hiking network\n\n\nAlso a work in progress…\n\n\n\n\n\n\n\n\nAug 6, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nExploring hiking network options\n\n\nAlso a work in progress…\n\n\n\n\n\n\n\n\nAug 7, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nA hiking network with better data\n\n\nHoming in on the most useful graph analysis outputs\n\n\n\n\n\n\n\n\nAug 29, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nCompute times of hiking network analysis\n\n\nVarying resolution and cutoff times in centrality analysis\n\n\n\n\n\n\n\n\nSep 3, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nTaking stock\n\n\nProgress to 4 September, 2024\n\n\n\n\n\n\n\n\nSep 4, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\n\n\n\n\n\n\nRefining hiking functions\n\n\nRevisiting hiking function estimation with more data\n\n\n\n\n\n\n\n\nSep 16, 2024\n\n\nDavid O’Sullivan\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "notebooks/00-notes.html",
@@ -348,6 +414,61 @@
     ]
   },
   {
+    "objectID": "notebooks/09-refining-hiking-functions.html",
+    "href": "notebooks/09-refining-hiking-functions.html",
+    "title": "Refining hiking functions",
+    "section": "",
+    "text": "Update History\n\n\n\n\n\n\n\n\nDate\nChanges\n\n\n\n\n2024-09-16\nInitial post.\nThis notebook explores options for more refined estimation of hiking functions using geology and (perhaps) individuals.\nCode\nlibrary(here)\nlibrary(sf)\nlibrary(dplyr)\nlibrary(tidyr)\nlibrary(stringr)\nlibrary(ggplot2)\nlibrary(hrbrthemes)\nlibrary(ggnewscale)\nlibrary(ggspatial)\nlibrary(minpack.lm)",
+    "crumbs": [
+      "Notebooks",
+      "Refining hiking functions"
+    ]
+  },
+  {
+    "objectID": "notebooks/09-refining-hiking-functions.html#helper-functions",
+    "href": "notebooks/09-refining-hiking-functions.html#helper-functions",
+    "title": "Refining hiking functions",
+    "section": "Helper functions",
+    "text": "Helper functions\nSome helper functions for estimation of hiking functions. See this noteboook for more details.\n\n# helper function to reduce data to a more smoothed form\nget_percentile_summary &lt;- function(df, percentile = 0.9) {\n  df |&gt; mutate(slope_h = round(slope_h, 2)) |&gt;\n    group_by(slope_h) |&gt;\n    summarise(speed_km_h = quantile(speed_km_h, percentile)) |&gt;\n    ungroup()\n}\n\nget_gaussian_hiking_function &lt;- function(df, percentile = 0.9) {\n  dpc &lt;- get_percentile_summary(df, percentile)\n  nlsLM(speed_km_h ~ a * dnorm(slope_h, m, s), data = dpc,\n        start = c(a = 5, m = 0, s = 0.5))\n}\n\nget_tobler_hiking_function &lt;- function(df, percentile = 0.9) {\n  dpc &lt;- get_percentile_summary(df, percentile)\n  nlsLM(speed_km_h ~ a * exp(-b * abs(slope_h + c)), data = dpc,\n        start = c(a = 5, b = 3, c = 0.05))  \n}\n\n# makes a prediction data frame with x, y values\nget_model_prediction_df &lt;- function(df, type = \"gaussian\", percentile = 0.9) {\n  if (type == \"gaussian\") {\n    m &lt;- get_gaussian_hiking_function(df, percentile)\n  } else {\n    m &lt;- get_tobler_hiking_function(df, percentile)\n  }\n  s &lt;- -100:100 / 50\n  data.frame(x = s, y = predict(m, data.frame(slope_h = s)))\n}",
+    "crumbs": [
+      "Notebooks",
+      "Refining hiking functions"
+    ]
+  },
+  {
+    "objectID": "notebooks/09-refining-hiking-functions.html#organise-the-data",
+    "href": "notebooks/09-refining-hiking-functions.html#organise-the-data",
+    "title": "Refining hiking functions",
+    "section": "Organise the data",
+    "text": "Organise the data\n\n# geologies data\ngeologies &lt;- \n  st_read(str_glue(\"{here()}/_data/ata-scar-geomap-geology-v2022-08-clipped.gpkg\")) |&gt; \n  select(SIMPDESC)\n\n# gps data and its bbox\ngps_data &lt;- st_read(str_glue(\"{here()}/_data/cleaned-gps-data/all-gps-traces.gpkg\"))\nbb &lt;- gps_data |&gt; st_bbox()\n\n# cut back to those geologies in the vicinity of the GPS data\ngeologies_in_range &lt;- geologies |&gt;\n  st_filter(bb |&gt; st_as_sfc()) |&gt; \n  mutate(cover = factor(SIMPDESC))\n\n# join geologies to the gps data\ngps_geol &lt;- gps_data |&gt;\n  select(slope_h, speed_km_h, distance_m, name, turn_angle) |&gt; \n  st_join(geologies_in_range) |&gt; \n  mutate(cover = factor(SIMPDESC)) |&gt;\n  select(-SIMPDESC) |&gt; \n  mutate(slope_h_round = round(slope_h * 10) / 10) |&gt;\n  drop_na()",
+    "crumbs": [
+      "Notebooks",
+      "Refining hiking functions"
+    ]
+  },
+  {
+    "objectID": "notebooks/09-refining-hiking-functions.html#remove-areas-where-there-is-a-lot-of-milling-about",
+    "href": "notebooks/09-refining-hiking-functions.html#remove-areas-where-there-is-a-lot-of-milling-about",
+    "title": "Refining hiking functions",
+    "section": "Remove areas where there is a lot of milling about",
+    "text": "Remove areas where there is a lot of milling about\nFor now do this simply by filtering by the density of GPS fixes. Perhaps explore processing the GPS data to compare smoothed ratios of aggregate distance between fixes to crude estimates of distance travelled based on the recorded speed.\n\nhexes &lt;- gps_geol |&gt; \n  st_make_grid(cellsize = 100, square = FALSE, what = \"polygons\") |&gt;\n  st_as_sf(crs = st_crs(gps_geol)) |&gt;\n  rename(geom = x) |&gt;\n  st_join(gps_geol |&gt; mutate(id = row_number()), left = FALSE) |&gt;\n  group_by(geom) |&gt;\n  summarise(n = n(), n_persons = n_distinct(name)) |&gt;\n  ungroup()\n\ngps_geol &lt;- gps_geol |&gt; \n  st_join(hexes) |&gt;\n  filter(n_persons &lt;= 10, n &lt;= 100)",
+    "crumbs": [
+      "Notebooks",
+      "Refining hiking functions"
+    ]
+  },
+  {
+    "objectID": "notebooks/09-refining-hiking-functions.html#estimate-models",
+    "href": "notebooks/09-refining-hiking-functions.html#estimate-models",
+    "title": "Refining hiking functions",
+    "section": "Estimate models",
+    "text": "Estimate models\n\npercentiles &lt;- rep(seq(0.75, 0.95, 0.05), 2)\nmodel_formats &lt;- rep(c(\"gaussian\", \"tobler\"), each = length(percentiles) / 2)\nresults &lt;- list()\nfor (i in seq_along(percentiles)) {\n  results[[i]] &lt;- gps_geol |&gt;\n    group_by(cover) |&gt;\n    group_split() |&gt;\n    lapply(get_model_prediction_df, type = model_formats[i], \n           percentile = percentiles[i]) |&gt;\n    bind_rows(.id = \"cover\") |&gt;\n    mutate(cover = levels(gps_geol$cover)[as.numeric(cover)],\n           percentile = percentiles[i], \n           model = model_formats[i])\n}\nmodel_predictions &lt;- results |&gt; bind_rows()\n\nAnd now some plots\n\nggplot() +\n  geom_point(data = gps_geol,\n             aes(x = slope_h, y = speed_km_h), colour = \"gray\", size = 0.05) +\n  geom_line(data = model_predictions, \n            aes(x = x, y = y, group = interaction(model, percentile), colour = model),\n            linewidth = 0.35, alpha = 0.65) +\n  scale_colour_brewer(palette = \"Set1\") +\n  facet_wrap( ~ cover, ncol = 2) +\n  theme_ipsum_rc()\n\n\n\n\n\n\n\n\n\nggplot() +\n  geom_boxplot(data = gps_geol,\n               aes(x = slope_h_round, y = speed_km_h, group = slope_h_round),\n               outlier.size = 0.25, colour = \"darkgrey\") +\n  geom_line(data = model_predictions, \n            aes(x = x, y = y, group = interaction(model, percentile), colour = model),\n            linewidth = 0.35, alpha = 0.65) +\n  scale_colour_brewer(palette = \"Set1\") +\n  facet_wrap( ~ cover, ncol = 2) +\n  theme_ipsum_rc()\n\n\n\n\n\n\n\n\n\nggplot() +\n  geom_sf(data = geologies_in_range, aes(fill = cover), \n          linewidth = 0.1, colour = \"white\", alpha = 0.4) +\n  scale_fill_brewer(palette = \"Set2\") +\n  new_scale_fill() +\n  geom_sf(data = hexes, aes(fill = n_persons), linewidth = 0) +\n  # geom_sf(data = hexes, aes(fill = n), linewidth = 0) +\n  # scale_fill_gradient(\n  #   transform = \"log10\",\n  #   breaks = c(1, 10, 20, 50, 200, 1000, 5000, 25000),\n  #   low = \"#f8f8f8\", high = \"#000000\") +\n  # guides(fill = guide_bins(show.limits = TRUE)) +\n  geom_sf(data = gps_geol, size = 0.005, pch = 19, colour = \"red\") +\n  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)]) +\n  annotation_scale(height = unit(0.1, \"cm\")) +\n  theme_ipsum_rc()",
+    "crumbs": [
+      "Notebooks",
+      "Refining hiking functions"
+    ]
+  },
+  {
     "objectID": "notebooks/02-collating-gps-data.html",
     "href": "notebooks/02-collating-gps-data.html",
     "title": "Cleaning GPS data",
@@ -356,72 +477,6 @@
     "crumbs": [
       "Notebooks",
       "Cleaning GPS data"
-    ]
-  },
-  {
-    "objectID": "notebooks/08-taking-stock.html",
-    "href": "notebooks/08-taking-stock.html",
-    "title": "Taking stock",
-    "section": "",
-    "text": "Update History\n\n\n\n\n\n\n\n\nDate\nChanges\n\n\n\n\n2024-08-29\nInitial post.\nThis notebook sets out progress to date.\nCode\nlibrary(here)\nlibrary(stringr)\nlibrary(ggplot2)\nlibrary(ggnewscale)\nlibrary(whitebox)\nlibrary(ggpubr)\nlibrary(ggspatial)\nlibrary(tmap)\n\nsource(str_glue(\"{here()}/scripts/raster-to-graph-functions.R\"))\nbase_folder &lt;- here()\ndata_folder &lt;- str_glue(\"{base_folder}/_data\")\ndem_folder  &lt;- str_glue(\"{base_folder}/_data/dem\")",
-    "crumbs": [
-      "Notebooks",
-      "Taking stock"
-    ]
-  },
-  {
-    "objectID": "notebooks/08-taking-stock.html#definition-of-the-study-area",
-    "href": "notebooks/08-taking-stock.html#definition-of-the-study-area",
-    "title": "Taking stock",
-    "section": "Definition of the study area",
-    "text": "Definition of the study area\nI’ve settled on two ‘basins’, Skelton and Dry Valleys, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project, downloadable from here.1\n\n\nCode\ncoastline &lt;- st_read(str_glue(\"{data_folder}/coastline.gpkg\"))\nbasins &lt;- st_read(str_glue(\"{dem_folder}/antarctic-basins.gpkg\"))\nstudy_basins &lt;- st_read(str_glue(\"{dem_folder}/dry-valleys-and-skelton.gpkg\"))\nstudy_area &lt;- st_read(str_glue(\"{dem_folder}/study-area-extent.gpkg\"))\ngps_data &lt;- st_read(str_glue(\"{data_folder}/cleaned-gps-data/all-gps-traces.gpkg\"))\ntiles &lt;- st_read(str_glue(\"{dem_folder}/REMA-index-included-tiles.gpkg\"))\nshade &lt;- rast(str_glue(\"{dem_folder}/32m/dry-valleys-combined-32m-browse.tif\"))\nshade8 &lt;- shade |&gt;\n  terra::aggregate(8) |&gt;\n  as.data.frame(xy = TRUE) |&gt;\n  rename(shade = `15_35_32m_v2.0_browse`)\ngeology &lt;- st_read(str_glue(\"{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg\"))\ncontiguous_geologies &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/common-inputs/contiguous-geologies.gpkg\"))\n\n\n\n\nCode\nbb &lt;- st_bbox(study_area)\nggplot() +\n  geom_sf(data = basins) + \n  geom_sf(data = coastline, colour = \"#5588aa\", fill = \"#00000000\") +\n  geom_sf(data = study_area, fill = \"#666666\", colour = \"white\") +\n  annotate(\"rect\", xmin = bb[1], ymin = bb[2], xmax = bb[3], ymax = bb[4], fill = \"#00000000\", colour = \"red\") +\n  theme_minimal()\n\n\n\n\n\n\n\n\n\nLooking more closely, Skelton was included in the study area extent because the provided GPS data from the 2015-16 season (shown in red below) extended into this basin in addition the Dry Valleys basin.\n\n\nCode\nggplot() +\n  geom_sf(data = coastline) +\n  geom_sf(data = study_basins, fill = \"grey\", colour = \"white\") +\n  geom_sf(data = gps_data, colour = \"red\", size = 0.025, title = \"GPS data\") +\n  geom_sf_text(data = study_basins, aes(label = NAME)) +\n  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)]) +\n  annotation_scale(height = unit(0.1, \"cm\"), location = \"tr\") +\n  theme_minimal() +\n  theme(axis.title = element_blank())\n\n\n\n\n\n\n\n\n\n\nDEM data\nBased on this study area DEM data was assembled from the REMA project2 downloaded from ftp.data.pgc.umn.edu, using at least to begin the 32m resolution product, extending across tiles as shown below.\n\n\nCode\nggplot() +\n  geom_raster(data = shade8, aes(x = x, y = y, fill = shade), alpha = 0.35) +\n  scale_fill_distiller(palette = \"Blues\", guide = \"none\") +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"red\") +\n  geom_sf(data = tiles, fill = \"#00000000\", colour = \"darkgrey\") +\n  geom_sf_text(data = tiles, aes(label = tile), size = 2.5) +\n  theme_void()",
-    "crumbs": [
-      "Notebooks",
-      "Taking stock"
-    ]
-  },
-  {
-    "objectID": "notebooks/08-taking-stock.html#definition-of-areas-of-interest",
-    "href": "notebooks/08-taking-stock.html#definition-of-areas-of-interest",
-    "title": "Taking stock",
-    "section": "Definition of areas of interest",
-    "text": "Definition of areas of interest\nMuch of the area delineated above is covered in permanent snow and ice. To delineate areas for closer study we use areas of classified geology obtained from the GNS GeoMAP3 and downloaded from here\nThis layer is clipped to the study area extent. Colours in the map below are randomly signed and indicative only.\n\n\nCode\nggplot() + \n  geom_sf(data = geology, aes(fill = SIMPDESC), linewidth = 0) +\n  guides(fill = \"none\") +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"black\") +\n  theme_void()\n\n\n\n\n\n\n\n\n\nThe geology layer serves two purposes:\n\nDelineation of areas of interest: large regions of contiguous geology are chosen as study areas\nEstimation of relative movement costs for building the hiking network\n\n\nAreas of interest\nThe five largest regions of contiguous geology in the study area have been chosen for closer study. These range in extent from almost 2600 to around 320 sq.km.\n\n\nCode\ntop5 &lt;- contiguous_geologies |&gt; arrange(desc(area)) |&gt; slice(1:5)\nbb &lt;- st_bbox(top5)\nggplot() +\n  geom_sf(data = study_area, fill = \"#00000000\", colour = \"grey\") +\n  geom_sf(data = geology, aes(fill = SIMPDESC), linewidth = 0, alpha = 0.35) +\n  geom_sf(data = contiguous_geologies, fill = \"#00000000\", colour = \"darkgrey\") +\n  geom_sf(data = top5, fill = \"#00000000\", colour = \"black\", linewidth = 0.35) +\n  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)]) +\n  guides(fill = \"none\") +\n  annotation_scale(height = unit(0.1, \"cm\")) +\n  theme_void()\n\n\n\n\n\n\n\n\n\n\n\nRelative movement cost\nFor the time being a very crude relative movement rate classification assigning any geology including the term till a cost 1.5, any containing the term rock a cost 2, and all other areas (water and ice) a null value -999 has been used. Better choices might be 1.19 (or 1.67) for till and 2.5 for rock per values cited in the documentation of the R movecost package, as follows:\n\n\n\n\n\n\n\nCover\nCost\n\n\n\n\nBlacktop roads, improved dirt paths, cement\n1.00\n\n\nLawn grass\n1.03\n\n\nLoose beach sand\n1.19\n\n\nDisturbed ground (former stone quarry)\n1.24\n\n\nHorse riding path, flat trails and meadows\n1.25\n\n\nTall grassland (with thistle and nettles)\n1.35\n\n\nOpen space above the treeline (i.e., 2000 m asl)\n1.50\n\n\nBad trails, stony outcrops and river beds\n1.67\n\n\nOff-paths\n1.67\n\n\nBog\n1.79\n\n\nOff-path areas below the treeline (pastures, forests, heathland)\n2.00\n\n\nRock\n2.50\n\n\nSwamp, water course\n5.00\n\n\n\nThese choices remain open for discussion and adjustment, in combination with determination of localised hiking functions from the provided GPS data.",
-    "crumbs": [
-      "Notebooks",
-      "Taking stock"
-    ]
-  },
-  {
-    "objectID": "notebooks/08-taking-stock.html#current-results-an-example",
-    "href": "notebooks/08-taking-stock.html#current-results-an-example",
-    "title": "Taking stock",
-    "section": "Current results: an example",
-    "text": "Current results: an example\nAn example output for the largest area of interest is shown below.\n\nr1 &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/output/dry-valleys-01-32m-betweenness-100-2.gpkg\"))\nr2 &lt;- st_read(str_glue(\"{data_folder}/dry-valleys/output/dry-valleys-01-32m-betweenness-200-2.gpkg\"))\next &lt;- st_read(str_glue(\"{data_folder}/broken-connection-extent.gpkg\"))\n\n\nggplot() +\n  geom_sf(data = r1, aes(colour = cost_vb), size = 0.025) +\n  scale_colour_viridis_c(option = \"A\", direction = -1) +\n  theme_void()\n\n\n\n\n\n\n\n\nThis result was obtained at nominal resolution of the hiking network 100m. A coarser grained network, nominal resolution 200m yields a similar result\n\nggplot() +\n  geom_sf(data = r2, aes(colour = cost_vb), size = 0.05) +\n  scale_colour_viridis_c(option = \"A\", direction = -1) +\n  geom_sf(data = ext, alpha = 0.35) +\n  theme_void()\n\n\n\n\n\n\n\n\nBoth results were obtained with a betweenness centrality calculation cutoff of 2 hours estimated hiking time. The resulting beweenness measures have been rescaled in both cases to a range between 1 and 100 to enable direct comparison. The distribution of the results in each case is similar, although the finer resolution network yields more strongly concentrated outcomes.\n\n\nCode\ndf &lt;- bind_rows(r1, r2) |&gt;\n  mutate(resolution = as.factor(resolution))\n\nggplot() +\n  geom_density(data = df, aes(x = cost_vb, fill = resolution, group = resolution), linewidth = 0, alpha = 0.5) +\n  xlab(\"Rescaled vertex betweenness\") +\n  ylab(\"Relative frequency\")\n\n\n\n\n\n\n\n\n\nHowever, it is worth noting that there are differences on closer inspection. The area highlighted in the second map above is shown below screenshotted from QGIS.\n\n\n\n\n\n\n\n\n\n\n\n\n\nThere are actually two spots here where the image on the right (200m resolution network) is disconnected relative to the 100m resolution case. Note how the 100m resolution network finds two paths through this region, where the 200m resolution network does not. The second ‘missing’ node is towards the top right of the image.\nIt would not be difficult to fix this by buffering the geology as required, but it may be that such narrow connections are not ‘really’ connections at all…",
-    "crumbs": [
-      "Notebooks",
-      "Taking stock"
-    ]
-  },
-  {
-    "objectID": "notebooks/08-taking-stock.html#footnotes",
-    "href": "notebooks/08-taking-stock.html#footnotes",
-    "title": "Taking stock",
-    "section": "Footnotes",
-    "text": "Footnotes\n\n\nMouginot, J., Scheuchl, B. & Rignot, E. MEaSUREs Antarctic Boundaries for IPY 2007-2009 from Satellite Radar, Version 2. 2017, Distributed by NASA National Snow and Ice Data Center Distributed Active Archive Center. https://doi.org/10.5067/AXE4121732AD. Date Accessed 09-03-2024.↩︎\nHowat, Ian, et al., 2022, “The Reference Elevation Model of Antarctica – Mosaics, Version 2”, https://doi.org/10.7910/DVN/EBW8UC, Harvard Dataverse, V1, Accessed: 28-29 August 2024.↩︎\nCox SC, B Smith Lyttle, S Elkind, CS Smith Siddoway, P Morin, G Capponi, T Abu-Alam, M Ballinger, L Bamber, B Kitchener, L Lelli, JF Mawson, A Millikin, N Dal Seno, L Whitburn, T White, A Burton-Johnson, L Crispini, D Elliot, S Elvevold, JW Goodge, JA Halpin, J Jacobs, E Mikhalsky, AP Martin, F Morgan, J Smellie, P Scadden, and GS Wilson. 2023. The GeoMAP (v.2022-08) continent-wide detailed geological dataset of Antarctica.PANGAEA. doi: 10.1594/PANGAEA.951482.↩︎",
-    "crumbs": [
-      "Notebooks",
-      "Taking stock"
-    ]
-  },
-  {
-    "objectID": "notebooks/07-compute-times-of-hiking-network-analysis.html#timings",
-    "href": "notebooks/07-compute-times-of-hiking-network-analysis.html#timings",
-    "title": "Compute times of hiking network analysis",
-    "section": "Timings",
-    "text": "Timings\nThe timing for this small area of interest at these resolutions and cutoff times are tabulated below.\n\ndf &lt;- results |&gt; \n  select(resolution, vb_base_time, vb_cost_time, cutoff) |&gt;\n  distinct() |&gt;\n  pivot_longer(cols = c(vb_base_time, vb_cost_time))\n\nggplot(df) +\n  geom_col(aes(x = cutoff, y = value, group = resolution, fill = resolution), position = \"dodge\") +\n  xlab(\"Betweenness calculation est. hiking time cutoff\") +\n  ylab(\"Time, sec\") +\n  theme_minimal()\n\n\n\n\n\n\n\n\nThis confirms that the time to perform betweenness centrality estimation increases with the square of the number of vertices in the network. The finer resolution network (100m) has four times as many nodes, and analysis takes around 16 times longer (&gt;15 seconds vs ~ 1 second in the cutoff = 5 case).\nWhen no cutoff time is used, the betweenness calculation takes much longer. It is clear from the maps above that the no cutoff case identifies ‘arterials’ although it is unclear that this is the most relevant concern for expected environmental impacts.\nFurther analysis of larger networks (the networks for the largest contiguous region are about 10 times larger than this one) confirms this result, with comparable analyses taking ~100 times longer, which on the computer used (an M2 Mac Mini) translates to several hours compute time for the most extensive betweenness estimation at 100m resolution.\nThese results suggest that it is important to settle on a resolution and cutoff distance judged appropriate for ongoing work to avoid costly repetition of sometimes time-consuming analysis. It is almost certainly preferable to apply some cutoff estimated hiking time to the calculation in any case.",
-    "crumbs": [
-      "Notebooks",
-      "Compute times of hiking network analysis"
     ]
   }
 ]
