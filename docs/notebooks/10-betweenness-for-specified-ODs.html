@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="David O’Sullivan">
-<meta name="dcterms.date" content="2024-07-17">
+<meta name="dcterms.date" content="2025-07-16">
 
-<title>Science impacts on Antarctica - Cleaning GPS data</title>
+<title>Science impacts on Antarctica - Betweenness centrality based on a limited set of locations</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -66,8 +66,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../notebooks/03-estimating-a-hiking-function.html" rel="next">
-<link href="../notebooks/01-exploring-gps-data.html" rel="prev">
+<link href="../notebooks/09-refining-hiking-functions.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -77,6 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -117,7 +119,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/00-notes.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/02-collating-gps-data.html">Cleaning GPS data</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/00-notes.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/10-betweenness-for-specified-ODs.html">Betweenness centrality based on a limited set of locations</a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
@@ -165,7 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/02-collating-gps-data.html" class="sidebar-item-text sidebar-link active">
+  <a href="../notebooks/02-collating-gps-data.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Cleaning GPS data</span></a>
   </div>
 </li>
@@ -213,7 +215,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -229,18 +231,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#read-raw-files-clean-and-write-any-that-still-have-data-remaining" id="toc-read-raw-files-clean-and-write-any-that-still-have-data-remaining" class="nav-link active" data-scroll-target="#read-raw-files-clean-and-write-any-that-still-have-data-remaining">Read raw files, clean and write any that still have data remaining</a></li>
-  <li><a href="#write-to-individual-gpkg-files-and-a-single-all-traces-file" id="toc-write-to-individual-gpkg-files-and-a-single-all-traces-file" class="nav-link" data-scroll-target="#write-to-individual-gpkg-files-and-a-single-all-traces-file">Write to individual GPKG files and a single all traces file</a></li>
+  <li><a href="#make-a-bunch-of-origin-locations" id="toc-make-a-bunch-of-origin-locations" class="nav-link active" data-scroll-target="#make-a-bunch-of-origin-locations">Make a bunch of origin locations</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/00-notes.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/02-collating-gps-data.html">Cleaning GPS data</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../notebooks/00-notes.html">Notebooks</a></li><li class="breadcrumb-item"><a href="../notebooks/10-betweenness-for-specified-ODs.html">Betweenness centrality based on a limited set of locations</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Cleaning GPS data</h1>
-<p class="subtitle lead">Assembling provided GPS data into cleaned files, and a single large dataset</p>
+<h1 class="title">Betweenness centrality based on a limited set of locations</h1>
+<p class="subtitle lead">Building from shortest path trees</p>
 </div>
 
 
@@ -257,7 +258,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 17, 2024</p>
+      <p class="date">July 16, 2025</p>
     </div>
   </div>
   
@@ -282,10 +283,6 @@ Update History
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <table class="table">
-<colgroup>
-<col style="width: 14%">
-<col style="width: 85%">
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Date</th>
@@ -294,130 +291,150 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">2024-07-19</td>
-<td style="text-align: left;">Rerun to add turn angles.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">2024-07-17</td>
+<td style="text-align: left;">2024-09-16</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
 </tbody>
 </table>
-<p>Run this code once only to make clean and aggregated GPS datasets.</p>
 </div>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stringr)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/gps-data-utils.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggnewscale)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggspatial)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(hrbrthemes)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(spatstat)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(igraph)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/raster-to-graph-functions.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
-<section id="read-raw-files-clean-and-write-any-that-still-have-data-remaining" class="level3">
-<h3 class="anchored" data-anchor-id="read-raw-files-clean-and-write-any-that-still-have-data-remaining">Read raw files, clean and write any that still have data remaining</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>src_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/GPS-1516Season-MiersValley"</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>tgt_folder <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data/cleaned-gps-data"</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(tgt_folder)) {</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dir.create</span>(tgt_folder)</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>persons <span class="ot">&lt;-</span> <span class="fu">dir</span>(src_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(str_split_i, <span class="st">"-"</span>, <span class="at">i =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unlist</span>()</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dfs <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>i <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (p <span class="cf">in</span> persons) {</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> i <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  df <span class="ot">&lt;-</span> <span class="fu">get_cleaned_gps_data</span>(<span class="fu">str_glue</span>(<span class="st">"{src_folder}/{p}-FINAL.csv"</span>), p) </span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">nrow</span>(df) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">|&gt;</span> <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/{p}-cleaned.csv"</span>))</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    dfs[[i]] <span class="ot">&lt;-</span> df</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">bind_rows</span>(dfs) <span class="sc">|&gt;</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write.csv</span>(<span class="fu">str_glue</span>(<span class="st">"{tgt_folder}/all-gps-traces.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dem_resolution     <span class="ot">&lt;-</span> <span class="st">"32m"</span> <span class="co"># 10m also available, but probably not critical</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>impassable_cost    <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">999</span>  <span class="co"># in the cover-costs file. hat-tip to ESRI</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data_folder        <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>base_folder        <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dry-valleys"</span>)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>input_folder       <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{base_folder}/common-inputs"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>output_folder      <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>basename           <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"dry-valleys"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>contiguous_geology <span class="ot">&lt;-</span> <span class="st">"05"</span>  <span class="co"># use small one '05' for testing</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dem_folder         <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dem/{dem_resolution}"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>dem_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{dem_folder}/{basename}-combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>extent_file        <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{base_folder}/contiguous-geologies/{basename}-extent-{contiguous_geology}.gpkg"</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>extent             <span class="ot">&lt;-</span> <span class="fu">st_read</span>(extent_file)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>terrain <span class="ot">&lt;-</span> <span class="fu">rast</span>(dem_file) <span class="sc">|&gt;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crop</span>(extent <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mask</span>(extent <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>))</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>shade <span class="ot">&lt;-</span> <span class="fu">get_hillshade</span>(terrain) <span class="sc">|&gt;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="co"># this is for plotting in ggplot</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>hillshade_basemap  <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(shade) <span class="sc">+</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotation_scale</span>(<span class="at">plot_unit =</span> <span class="st">"m"</span>, <span class="at">height =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">"cm"</span>)) <span class="sc">+</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>landcover_file     <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-cover-costs.gpkg"</span>)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>cover              <span class="ot">&lt;-</span> <span class="fu">st_read</span>(landcover_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
-<section id="write-to-individual-gpkg-files-and-a-single-all-traces-file" class="level3">
-<h3 class="anchored" data-anchor-id="write-to-individual-gpkg-files-and-a-single-all-traces-file">Write to individual GPKG files and a single all traces file</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>files <span class="ot">&lt;-</span> <span class="fu">str_c</span>(tgt_folder, <span class="st">"/"</span>, <span class="fu">dir</span>(<span class="at">path =</span> tgt_folder, <span class="at">pattern =</span> <span class="st">".csv"</span>))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (f <span class="cf">in</span> files) {</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_gps_data_as_sf</span>(f) <span class="sc">|&gt;</span> </span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_replace</span>(f, <span class="st">"csv"</span>, <span class="st">"gpkg"</span>), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/all-gps-traces.gpkg' using driver `GPKG'
-Writing layer `all-gps-traces' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/all-gps-traces.gpkg' using driver `GPKG'
-Writing 112216 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/AVC-cleaned.gpkg' using driver `GPKG'
-Writing layer `AVC-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/AVC-cleaned.gpkg' using driver `GPKG'
-Writing 5069 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Ben-cleaned.gpkg' using driver `GPKG'
-Writing layer `Ben-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Ben-cleaned.gpkg' using driver `GPKG'
-Writing 6918 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Charlie-cleaned.gpkg' using driver `GPKG'
-Writing layer `Charlie-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Charlie-cleaned.gpkg' using driver `GPKG'
-Writing 5851 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Craig-cleaned.gpkg' using driver `GPKG'
-Writing layer `Craig-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Craig-cleaned.gpkg' using driver `GPKG'
-Writing 1668 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Fraser-cleaned.gpkg' using driver `GPKG'
-Writing layer `Fraser-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Fraser-cleaned.gpkg' using driver `GPKG'
-Writing 7216 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Gemma-cleaned.gpkg' using driver `GPKG'
-Writing layer `Gemma-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Gemma-cleaned.gpkg' using driver `GPKG'
-Writing 8428 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Georgia-cleaned.gpkg' using driver `GPKG'
-Writing layer `Georgia-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Georgia-cleaned.gpkg' using driver `GPKG'
-Writing 4685 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanHawes-cleaned.gpkg' using driver `GPKG'
-Writing layer `IanHawes-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanHawes-cleaned.gpkg' using driver `GPKG'
-Writing 6593 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanMcD-cleaned.gpkg' using driver `GPKG'
-Writing layer `IanMcD-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/IanMcD-cleaned.gpkg' using driver `GPKG'
-Writing 8861 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Jayne-cleaned.gpkg' using driver `GPKG'
-Writing layer `Jayne-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Jayne-cleaned.gpkg' using driver `GPKG'
-Writing 6448 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Kurt-cleaned.gpkg' using driver `GPKG'
-Writing layer `Kurt-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Kurt-cleaned.gpkg' using driver `GPKG'
-Writing 6178 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Marwan-cleaned.gpkg' using driver `GPKG'
-Writing layer `Marwan-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Marwan-cleaned.gpkg' using driver `GPKG'
-Writing 10385 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Paul-cleaned.gpkg' using driver `GPKG'
-Writing layer `Paul-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Paul-cleaned.gpkg' using driver `GPKG'
-Writing 7320 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Peyman-cleaned.gpkg' using driver `GPKG'
-Writing layer `Peyman-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Peyman-cleaned.gpkg' using driver `GPKG'
-Writing 8390 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Pierre-cleaned.gpkg' using driver `GPKG'
-Writing layer `Pierre-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Pierre-cleaned.gpkg' using driver `GPKG'
-Writing 8615 features with 26 fields and geometry type Point.
-Deleting source `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Tim-cleaned.gpkg' using driver `GPKG'
-Writing layer `Tim-cleaned' to data source 
-  `/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/cleaned-gps-data/Tim-cleaned.gpkg' using driver `GPKG'
-Writing 9591 features with 26 fields and geometry type Point.</code></pre>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> resolution <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">3</span>))</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># check if we have already made this dataset</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>hexgrid_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-hex-grid-{resolution}.gpkg"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(hexgrid_file)) {</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> <span class="fu">st_read</span>(hexgrid_file)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  xy  <span class="ot">&lt;-</span> extent <span class="sc">|&gt;</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_make_grid</span>(<span class="at">cellsize =</span> hex_cell_spacing, <span class="at">what =</span> <span class="st">"centers"</span>, <span class="at">square =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_as_sf</span>() <span class="sc">|&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">geometry =</span> x) <span class="sc">|&gt;</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_set_crs</span>(<span class="fu">st_crs</span>(extent))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  coords <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span> <span class="fu">st_coordinates</span>()</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  xy <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">x =</span> coords[, <span class="dv">1</span>], <span class="at">y =</span> coords[, <span class="dv">2</span>])</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  xy <span class="sc">|&gt;</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_write</span>(<span class="fu">str_glue</span>(hexgrid_file), <span class="at">delete_dsn =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> terrain <span class="sc">|&gt;</span> terra<span class="sc">::</span><span class="fu">extract</span>(xy <span class="sc">|&gt;</span> <span class="fu">as</span>(<span class="st">"SpatVector"</span>), <span class="at">method =</span> <span class="st">"bilinear"</span>)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> xy <span class="sc">|&gt;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">z =</span> z[, <span class="dv">2</span>]) <span class="sc">|&gt;</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_join</span>(cover) <span class="sc">|&gt;</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(z), cost <span class="sc">!=</span> impassable_cost)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   </span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_glue</span>(<span class="st">"{base_folder}/output/{basename}-{contiguous_geology}-{dem_resolution}-graph-hex-{resolution}.txt"</span>) </span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(graph_file)) {</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">read_graph</span>(graph_file) </span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">graph_from_points</span>(pts, hex_cell_spacing <span class="sc">*</span> <span class="fl">1.1</span>)</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">write_graph</span>(G, graph_file)</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co"># note... for now this uses a default Tobler hiking function</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, <span class="at">xyz =</span> pts, <span class="at">impedances =</span> pts<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="make-a-bunch-of-origin-locations" class="level2">
+<h2 class="anchored" data-anchor-id="make-a-bunch-of-origin-locations">Make a bunch of origin locations</h2>
+<p>Use <code>spatstat</code> to make a set of random locations</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>origin_pts <span class="ot">&lt;-</span> <span class="fu">rSSI</span>(<span class="dv">1000</span>, <span class="at">n =</span> <span class="dv">15</span>, <span class="at">win =</span> <span class="fu">as.owin</span>(extent)) <span class="sc">|&gt;</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>() <span class="sc">|&gt;</span> </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_crs</span>(<span class="fu">st_crs</span>(extent)) <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="sc">-</span><span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>label)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>origin_is <span class="ot">&lt;-</span> origin_pts <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_nearest_feature</span>(pts)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>origin_vs <span class="ot">&lt;-</span> pts <span class="sc">|&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">id =</span> <span class="fu">row_number</span>()) <span class="sc">|&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(origin_is) <span class="sc">|&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">importance =</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">25</span>, <span class="fu">n</span>(), <span class="at">replace =</span> <span class="cn">TRUE</span>, <span class="at">prob =</span> <span class="dv">25</span><span class="sc">:</span><span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Accumulate how often they appear on shortest paths.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># put all vertices on a shortest path to begin</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>vs_on_shortest_paths <span class="ot">&lt;-</span> <span class="fu">V</span>(G) <span class="sc">|&gt;</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.vector</span>()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(origin_vs)) {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="co"># one entry for each appearance on a shortest path</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  new_shortest_paths <span class="ot">&lt;-</span> <span class="fu">shortest_paths</span>(G, origin_vs<span class="sc">$</span>id[i], origin_vs<span class="sc">$</span>id[<span class="sc">-</span>i], </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="at">weights =</span> <span class="fu">edge_attr</span>(G, <span class="st">"cost"</span>))<span class="sc">$</span>vpath <span class="sc">|&gt;</span> </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">reduce</span>(c) <span class="sc">|&gt;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(origin_vs<span class="sc">$</span>importance[i])</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  vs_on_shortest_paths <span class="ot">&lt;-</span> vs_on_shortest_paths <span class="sc">|&gt;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(new_shortest_paths)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>shortest_path_counts <span class="ot">&lt;-</span> vs_on_shortest_paths <span class="sc">|&gt;</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">table</span>() <span class="sc">|&gt;</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.vector</span>()</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">set_vertex_attr</span>(G, <span class="st">"sp_betweenness"</span>, <span class="at">value =</span> shortest_path_counts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>spb <span class="ot">&lt;-</span> G <span class="sc">|&gt;</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  igraph<span class="sc">::</span><span class="fu">as_data_frame</span>(<span class="at">what =</span> <span class="st">"vertices"</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> spb <span class="sc">|&gt;</span> <span class="fu">filter</span>(sp_betweenness <span class="sc">&gt;</span> <span class="dv">1</span>), </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">colour =</span> sp_betweenness),<span class="at">size =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_viridis_c</span>(<span class="at">option =</span> <span class="st">"A"</span>, <span class="at">direction =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> origin_vs, <span class="fu">aes</span>(<span class="at">size =</span> importance), <span class="at">colour =</span> <span class="st">"black"</span>, <span class="at">pch =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_ipsum_rc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><a href="10-betweenness-for-specified-ODs_files/figure-html/unnamed-chunk-6-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="10-betweenness-for-specified-ODs_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="960"></a></p>
+</figure>
+</div>
 </div>
 </div>
 
@@ -836,17 +853,39 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../notebooks/01-exploring-gps-data.html" class="pagination-link" aria-label="Exploring GPS data">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Exploring GPS data</span>
+      <a href="../notebooks/09-refining-hiking-functions.html" class="pagination-link" aria-label="Refining hiking functions">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Refining hiking functions</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../notebooks/03-estimating-a-hiking-function.html" class="pagination-link" aria-label="Estimating a hiking function">
-        <span class="nav-page-text">Estimating a hiking function</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
   </div>
 </nav>
 </div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","loop":false,"selector":".lightbox","closeEffect":"zoom","descPosition":"bottom"});
+window.onload = () => {
+  lightboxQuarto.on('slide_before_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    const href = trigger.getAttribute('href');
+    if (href !== null) {
+      const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+      if (imgEl !== null) {
+        const srcAttr = imgEl.getAttribute("src");
+        if (srcAttr && srcAttr.startsWith("data:")) {
+          slideConfig.href = srcAttr;
+        }
+      }
+    } 
+  });
+
+  lightboxQuarto.on('slide_after_load', (data) => {
+    const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+    if (window.Quarto?.typesetMath) {
+      window.Quarto.typesetMath(slideNode);
+    }
+  });
+
+};
+          </script>
 
 
 
