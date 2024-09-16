@@ -326,7 +326,7 @@ Update History
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>contiguous_geology <span class="ot">&lt;-</span> <span class="st">"05"</span>  <span class="co"># use small one '05' for testing</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>dem_folder         <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{data_folder}/dem/{dem_resolution}"</span>)</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>dem_file <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{dem_folder}/{basename}-combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>dem_file           <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{dem_folder}/{basename}-combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>extent_file        <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{base_folder}/contiguous-geologies/{basename}-extent-{contiguous_geology}.gpkg"</span>)</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>extent             <span class="ot">&lt;-</span> <span class="fu">st_read</span>(extent_file)</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
@@ -422,7 +422,7 @@ Update History
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>spb <span class="ot">&lt;-</span> G <span class="sc">|&gt;</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  igraph<span class="sc">::</span><span class="fu">as_data_frame</span>(<span class="at">what =</span> <span class="st">"vertices"</span>)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="sc">+</span> </span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> spb <span class="sc">|&gt;</span> <span class="fu">filter</span>(sp_betweenness <span class="sc">&gt;</span> <span class="dv">1</span>), </span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">colour =</span> sp_betweenness),<span class="at">size =</span> <span class="fl">0.05</span>) <span class="sc">+</span></span>
@@ -861,7 +861,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","loop":false,"selector":".lightbox","closeEffect":"zoom","descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"loop":false,"descPosition":"bottom","openEffect":"zoom","closeEffect":"zoom","selector":".lightbox"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
