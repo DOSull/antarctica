@@ -231,7 +231,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#make-a-bunch-of-origin-locations" id="toc-make-a-bunch-of-origin-locations" class="nav-link active" data-scroll-target="#make-a-bunch-of-origin-locations">Make a bunch of origin locations</a></li>
+  <li><a href="#setting-up-the-data-sets-and-folders" id="toc-setting-up-the-data-sets-and-folders" class="nav-link active" data-scroll-target="#setting-up-the-data-sets-and-folders">Setting up the data sets and folders</a></li>
+  <li><a href="#make-a-bunch-of-origin-locations" id="toc-make-a-bunch-of-origin-locations" class="nav-link" data-scroll-target="#make-a-bunch-of-origin-locations">Make a bunch of origin locations</a></li>
   </ul>
 </nav>
     </div>
@@ -291,6 +292,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-19</td>
+<td style="text-align: left;">Detailed the commentary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-09-16</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -315,7 +320,12 @@ Update History
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/raster-to-graph-functions.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+<section id="setting-up-the-data-sets-and-folders" class="level2">
+<h2 class="anchored" data-anchor-id="setting-up-the-data-sets-and-folders">Setting up the data sets and folders</h2>
+<p>This is similar to many previous notebooks.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dem_resolution     <span class="ot">&lt;-</span> <span class="st">"32m"</span> <span class="co"># 10m also available, but probably not critical</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>impassable_cost    <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">999</span>  <span class="co"># in the cover-costs file. hat-tip to ESRI</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>data_folder        <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{here()}/_data"</span>)</span>
@@ -345,8 +355,12 @@ Update History
 <span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>landcover_file     <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{input_folder}/{basename}-cover-costs.gpkg"</span>)</span>
 <span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>cover              <span class="ot">&lt;-</span> <span class="fu">st_read</span>(landcover_file)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
+<p>Also similar is building or retrieving the graph representation of the terrain.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>resolution <span class="ot">&lt;-</span> <span class="dv">100</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>hex_cell_spacing <span class="ot">&lt;-</span> resolution <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span> <span class="sc">/</span> <span class="fu">sqrt</span>(<span class="dv">3</span>))</span>
@@ -383,7 +397,9 @@ Update History
 <span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co"># note... for now this uses a default Tobler hiking function</span></span>
 <span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, <span class="at">xyz =</span> pts, <span class="at">impedances =</span> pts<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
+</section>
 <section id="make-a-bunch-of-origin-locations" class="level2">
 <h2 class="anchored" data-anchor-id="make-a-bunch-of-origin-locations">Make a bunch of origin locations</h2>
 <p>Use <code>spatstat</code> to make a set of random locations</p>
@@ -861,7 +877,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"loop":false,"descPosition":"bottom","openEffect":"zoom","closeEffect":"zoom","selector":".lightbox"});
+<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","closeEffect":"zoom","selector":".lightbox","openEffect":"zoom","loop":false});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
