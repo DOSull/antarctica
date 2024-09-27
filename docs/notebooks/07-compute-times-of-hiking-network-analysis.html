@@ -216,7 +216,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -232,7 +238,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#timings" id="toc-timings" class="nav-link active" data-scroll-target="#timings">Timings</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#timings" id="toc-timings" class="nav-link" data-scroll-target="#timings">Timings</a></li>
   </ul>
 </nav>
     </div>
@@ -292,10 +299,14 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-09-04</td>
 <td style="text-align: left;">Added quick analysis of timings.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-08-29</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -304,6 +315,13 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>The key findings are:</p>
+<ul>
+<li>As expected calculation of betweenness times increases with the square of the network size (in number of nodes), hence with the 4th power of the resolution.</li>
+<li>This combinatorial explosion (it’s polynomial, but not in a good way…) means that restricting betweenness calculations using a cost cutoff is desirable. For a given cutoff calculation time is linear in the network size, hence it grows with the square of the resolution. For the landscape sub-areas under consideration calculation of everywhere-to-everywhere betweenness on 100m nominal resolution networks takes several hours on a stock machine (M2 Mac mini) whereas betweenness calculations with 2 or 3 hour cutoffs take manageable 10-20 minute times.</li>
+</ul>
 <p>This notebook explores the impact of varying the resolution of the hiking network and cutoff times on computation times.</p>
 <div class="cell">
 <details class="code-fold">
@@ -470,6 +488,7 @@ Update History
         delete_dsn = TRUE)
   }
 }</code></pre>
+</section>
 <section id="timings" class="level2">
 <h2 class="anchored" data-anchor-id="timings">Timings</h2>
 <p>The timing for this small area of interest at these resolutions and cutoff times are tabulated below.</p>
@@ -923,7 +942,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","closeEffect":"zoom","descPosition":"bottom","loop":false});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","descPosition":"bottom","openEffect":"zoom","closeEffect":"zoom","loop":false});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

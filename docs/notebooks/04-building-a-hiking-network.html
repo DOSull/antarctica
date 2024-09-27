@@ -216,7 +216,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -232,7 +238,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#making-a-hex-grid-across-the-terrain" id="toc-making-a-hex-grid-across-the-terrain" class="nav-link active" data-scroll-target="#making-a-hex-grid-across-the-terrain">Making a hex grid across the terrain</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#making-a-hex-grid-across-the-terrain" id="toc-making-a-hex-grid-across-the-terrain" class="nav-link" data-scroll-target="#making-a-hex-grid-across-the-terrain">Making a hex grid across the terrain</a></li>
   <li><a href="#retrieve-elevations-from-the-terrain" id="toc-retrieve-elevations-from-the-terrain" class="nav-link" data-scroll-target="#retrieve-elevations-from-the-terrain">Retrieve elevations from the terrain</a></li>
   <li><a href="#make-a-graph-i.e.-network-connecting-these-elevation-points" id="toc-make-a-graph-i.e.-network-connecting-these-elevation-points" class="nav-link" data-scroll-target="#make-a-graph-i.e.-network-connecting-these-elevation-points">Make a graph (i.e.&nbsp;network) connecting these elevation points</a></li>
   <li><a href="#make-an-estimated-travel-time-map" id="toc-make-an-estimated-travel-time-map" class="nav-link" data-scroll-target="#make-an-estimated-travel-time-map">Make an estimated travel time map</a></li>
@@ -287,10 +294,6 @@ Update History
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <table class="table">
-<colgroup>
-<col style="width: 16%">
-<col style="width: 83%">
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Date</th>
@@ -299,6 +302,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-08-06</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -307,6 +314,15 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>The key findings are:</p>
+<ul>
+<li>Essential steps in building a hiking network are set out and remain valid.</li>
+<li>The interpolation step in <a href="#make-an-estimated-travel-time-map">Making an estimated travel time map</a> is overkill: it is sufficient for mapping purposes to display a point map of the graph vertices.</li>
+<li>An additional necessary step became apparent in <a href="../notebooks/12-betweenness-for-specified-ODs.html">later work</a> where very steep edges remain in the networks. These may not matter much in practice as shortest path network approaches are unlikely to highlight them as plausible routes (some very steep edges end up with multi-hour traversal time estimates!). However, it makes sense to remove such edges completely from consideration, and if that makes some regions completely inaccessible this is probably a more realistic outcome.
+<hr></li>
+</ul>
 <p>This notebook explores creation of hiking networks across a terrain where movement rates may depend on the direction of movement (because going uphill is different than going downhill…).</p>
 <p>First we set up some folders and filenames.</p>
 <div class="cell">
@@ -358,6 +374,7 @@ Update History
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>graph_file <span class="ot">&lt;-</span>   <span class="fu">str_glue</span>(<span class="st">"{output_folder}/{basename}-graph-hex-{resolution}.txt"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p><code>hex_resolution</code> is a hexagon spacing for use in <code>st_make_grid</code> that yields the same area cell as square cells with edge length given by <code>resolution</code></p>
+</section>
 <section id="making-a-hex-grid-across-the-terrain" class="level2">
 <h2 class="anchored" data-anchor-id="making-a-hex-grid-across-the-terrain">Making a hex grid across the terrain</h2>
 <p>We build the network based on hex spaced points, not a square grid. This is helpful in making all edges the same length, as opposed to in a square grid where diagonal neighbour cell centres are further apart than edge neighbouring cells.</p>
@@ -1022,7 +1039,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","descPosition":"bottom","selector":".lightbox","closeEffect":"zoom","loop":false});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","loop":false,"descPosition":"bottom","closeEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

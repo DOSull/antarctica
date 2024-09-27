@@ -245,7 +245,13 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -261,7 +267,8 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#now-look-at-the-slope-speed-plots" id="toc-now-look-at-the-slope-speed-plots" class="nav-link active" data-scroll-target="#now-look-at-the-slope-speed-plots">Now look at the slope-speed plots</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#now-look-at-the-slope-speed-plots" id="toc-now-look-at-the-slope-speed-plots" class="nav-link" data-scroll-target="#now-look-at-the-slope-speed-plots">Now look at the slope-speed plots</a></li>
   <li><a href="#cleaning-the-data-to-get-a-better-hiking-function" id="toc-cleaning-the-data-to-get-a-better-hiking-function" class="nav-link" data-scroll-target="#cleaning-the-data-to-get-a-better-hiking-function">Cleaning the data to get a better hiking function</a>
   <ul class="collapse">
   <li><a href="#upper-bound-of-the-distribution" id="toc-upper-bound-of-the-distribution" class="nav-link" data-scroll-target="#upper-bound-of-the-distribution">Upper bound of the distribution</a></li>
@@ -320,10 +327,6 @@ Update History
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <table class="table">
-<colgroup>
-<col style="width: 16%">
-<col style="width: 83%">
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Date</th>
@@ -332,14 +335,18 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-07-22</td>
 <td style="text-align: left;">Added variables to hex bin filter method.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-07-19</td>
 <td style="text-align: left;">Added nlsLM estimation of models.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">2024-07-17</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -348,6 +355,9 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>This notebook provides a useful overview of the process of estimating a hiking function from the GPS data but <strong>IS SUPERSEDED</strong> by <a href="../notebooks/09-refining-hiking-functions.html">this notebook</a>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
@@ -375,6 +385,7 @@ Bounding box:  xmin: 352183.3 ymin: -1254631 xmax: 364874.4 ymax: -1240066
 Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 </div>
 </div>
+</section>
 <section id="now-look-at-the-slope-speed-plots" class="level2">
 <h2 class="anchored" data-anchor-id="now-look-at-the-slope-speed-plots">Now look at the slope-speed plots</h2>
 <p>If we first make a crude estimate using <code>geom_smooth</code> on all the data we can start to appreciate the challenge</p>
@@ -1083,7 +1094,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","selector":".lightbox","closeEffect":"zoom","loop":false,"descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","loop":false,"openEffect":"zoom","closeEffect":"zoom","descPosition":"bottom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

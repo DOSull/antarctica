@@ -216,7 +216,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -232,7 +238,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#now-we-have-a-graph" id="toc-now-we-have-a-graph" class="nav-link active" data-scroll-target="#now-we-have-a-graph">Now we have a graph</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#now-we-have-a-graph" id="toc-now-we-have-a-graph" class="nav-link" data-scroll-target="#now-we-have-a-graph">Now we have a graph</a></li>
   <li><a href="#ok-so-what-can-we-do-with-these-things" id="toc-ok-so-what-can-we-do-with-these-things" class="nav-link" data-scroll-target="#ok-so-what-can-we-do-with-these-things">OK… so what can we do with these things?!</a>
   <ul class="collapse">
   <li><a href="#minimum-spanning-tree" id="toc-minimum-spanning-tree" class="nav-link" data-scroll-target="#minimum-spanning-tree">Minimum spanning tree</a></li>
@@ -291,10 +298,6 @@ Update History
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <table class="table">
-<colgroup>
-<col style="width: 16%">
-<col style="width: 83%">
-</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Date</th>
@@ -303,6 +306,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-08-07</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -311,6 +318,16 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>The key findings are:</p>
+<ul>
+<li><a href="#code-cell-4">Estimated travel time maps</a> are easily produced, but only show travel time from a single origin. This might have use for a base camp location, but otherwise seems to have limited value.</li>
+<li>Some graph derivatives are interesting but unlikely to be especially useful, e.g.&nbsp;<a href="#shortest-path-tree">shortest path tree</a>, <a href="#minimum-spanning-tree">minimum spanning tree</a>.</li>
+<li>The most promising approach is centrality measures on the graph. Among the <a href="https://en.wikipedia.org/wiki/Centrality">options available</a> the most promising class of measures are <a href="https://en.wikipedia.org/wiki/Betweenness_centrality">betweennees measures</a> since these focus attention on graph edges and vertices most often traversed along the shortest routes among vertices.</li>
+<li>Both vertex and <a href="#edge-betweenness">edge betweenness</a> are available options. Only the latter is explored here, but <em>vertex betweenness</em> is more readily visualized and in <a href="../notebooks/06-a-hiking-network-with-better-data.html#betweenness-centralities">later notebooks</a> the two approaches lead to essentially the same conclusions.
+<hr></li>
+</ul>
 <p>Per the previous notebook we’ll make a small network (lower resolution) so we can explore the possibilities of this graph representation.</p>
 <div class="cell">
 <details class="code-fold">
@@ -397,6 +414,7 @@ Update History
 <span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>G <span class="ot">&lt;-</span> <span class="fu">assign_movement_variables_to_graph</span>(G, xyz, <span class="at">impedances =</span> costs<span class="sc">$</span>cost)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
 <section id="now-we-have-a-graph" class="level2">
 <h2 class="anchored" data-anchor-id="now-we-have-a-graph">Now we have a graph</h2>
 <p>So let’s take a look…</p>
@@ -1024,7 +1042,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","closeEffect":"zoom","loop":false,"selector":".lightbox","openEffect":"zoom"});
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","selector":".lightbox","descPosition":"bottom","loop":false,"closeEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

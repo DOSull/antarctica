@@ -216,7 +216,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -301,6 +307,10 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added some notes on future work.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-08-29</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -309,7 +319,12 @@ Update History
 </div>
 </div>
 </div>
-<p>This notebook sets out progress to date.</p>
+<p>This notebook sets out progress to date (end of August 2024).</p>
+<p>Since it was assembled, some refinements to the process have been developed:</p>
+<ul>
+<li><a href="../notebooks/09-refining-hiking-functions.html">Further refinement of hiking function estimation</a> suggests that there is no need to include terrain factors in the cost calculation for network edges.</li>
+<li>Hiking networks themselves should remove steep/slow edges. This became apparent in developing code for <a href="../notebooks/12-betweenness-for-specified-ODs.html">betweenness calculations based on a limited set of origins and destinations</a>, when imposing a cost cutoff reveals the existence of some very costly edges in networks (this should have been apparent sooner… but so it goes).</li>
+</ul>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -1046,7 +1061,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","openEffect":"zoom","selector":".lightbox","descPosition":"bottom","loop":false});
+<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","openEffect":"zoom","selector":".lightbox","loop":false,"closeEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

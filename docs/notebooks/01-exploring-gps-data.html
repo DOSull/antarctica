@@ -216,7 +216,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -232,7 +238,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#exploration-of-the-data" id="toc-exploration-of-the-data" class="nav-link active" data-scroll-target="#exploration-of-the-data">Exploration of the data</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#exploration-of-the-data" id="toc-exploration-of-the-data" class="nav-link" data-scroll-target="#exploration-of-the-data">Exploration of the data</a></li>
   <li><a href="#sanity-checking-the-gps-estimates-of-speed-distance-and-height" id="toc-sanity-checking-the-gps-estimates-of-speed-distance-and-height" class="nav-link" data-scroll-target="#sanity-checking-the-gps-estimates-of-speed-distance-and-height">Sanity checking the GPS estimates of speed, distance, and height</a>
   <ul class="collapse">
   <li><a href="#distance-estimates" id="toc-distance-estimates" class="nav-link" data-scroll-target="#distance-estimates">Distance estimates</a></li>
@@ -293,8 +300,8 @@ Update History
 <div class="callout-body-container callout-body">
 <table class="table">
 <colgroup>
-<col style="width: 14%">
-<col style="width: 85%">
+<col style="width: 20%">
+<col style="width: 80%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -304,10 +311,14 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-07-19</td>
 <td style="text-align: left;">Updated to add turn angle calculation and source gps cleaning function from gps-data-util.R.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-07-16</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -316,6 +327,16 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>The key findings are:</p>
+<ul>
+<li>GPS reported speed and height data are reasonable choices to use in the estimation of hiking functions.</li>
+<li>However, some cleanup is required: speeds of up to 200km/h (helicopter flights), very long elapsed distances, and some negative elevations appear in the raw data and should be removed.</li>
+<li>Not all the issues with the GPS data are uncovered in this notebook (it is an initial exploration), so some additional filtering is applied in subsequent notebooks as deemed necessary. In particular, see <a href="../notebooks/09-refining-hiking-functions.html">this notebook</a></li>
+<li>The bulk of the GPS data cleaning operations are carried out on the basis of the list compiled at the end of this notebook, detailed in <a href="#conclusion-a-reasonable-gps-file-cleaning-function">this section</a> and implemented in <a href="../scripts/gps-data-utils.R">this script</a>
+<hr></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
@@ -342,6 +363,7 @@ Update History
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">rcr =</span> <span class="fu">as.logical</span>(rcr),</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">date_time =</span> <span class="fu">ymd_hms</span>(<span class="fu">paste</span>(date, time)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
 <section id="exploration-of-the-data" class="level2">
 <h2 class="anchored" data-anchor-id="exploration-of-the-data">Exploration of the data</h2>
 <p>A summary of the data suggests that there are some data rows that should be ignored.</p>
@@ -1044,7 +1066,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"descPosition":"bottom","selector":".lightbox","loop":false,"closeEffect":"zoom","openEffect":"zoom"});
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","selector":".lightbox","closeEffect":"zoom","descPosition":"bottom","loop":false});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;

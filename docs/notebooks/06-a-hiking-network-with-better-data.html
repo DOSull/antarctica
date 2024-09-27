@@ -245,7 +245,13 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../notebooks/10-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
+  <a href="../notebooks/11-refining-hiking-network-construction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Refining hiking network construction</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../notebooks/12-betweenness-for-specified-ODs.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Betweenness centrality based on a limited set of locations</span></a>
   </div>
 </li>
@@ -261,7 +267,8 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#set-up-folders-and-some-base-parameters" id="toc-set-up-folders-and-some-base-parameters" class="nav-link active" data-scroll-target="#set-up-folders-and-some-base-parameters">Set up folders and some base parameters</a></li>
+  <li><a href="#tldr-executive-summary" id="toc-tldr-executive-summary" class="nav-link active" data-scroll-target="#tldr-executive-summary">TL;DR Executive summary</a></li>
+  <li><a href="#set-up-folders-and-some-base-parameters" id="toc-set-up-folders-and-some-base-parameters" class="nav-link" data-scroll-target="#set-up-folders-and-some-base-parameters">Set up folders and some base parameters</a></li>
   <li><a href="#load-the-terrain-and-crop-to-the-extent" id="toc-load-the-terrain-and-crop-to-the-extent" class="nav-link" data-scroll-target="#load-the-terrain-and-crop-to-the-extent">Load the terrain and crop to the extent</a></li>
   <li><a href="#make-the-graph" id="toc-make-the-graph" class="nav-link" data-scroll-target="#make-the-graph">Make the graph</a></li>
   <li><a href="#now-we-have-a-graph" id="toc-now-we-have-a-graph" class="nav-link" data-scroll-target="#now-we-have-a-graph">Now we have a graph</a></li>
@@ -332,14 +339,18 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-09-26</td>
+<td style="text-align: left;">Added an executive summary.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-09-03</td>
 <td style="text-align: left;">Added tentative conclusion pointing to need to explore performance when cutoff is introduced to betweennness calculation.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-09-01</td>
 <td style="text-align: left;">Cleaned up to show the workflow.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">2024-08-29</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -348,6 +359,14 @@ Update History
 </div>
 </div>
 </div>
+<section id="tldr-executive-summary" class="level2">
+<h2 class="anchored" data-anchor-id="tldr-executive-summary">TL;DR Executive summary</h2>
+<p>The key findings progressing the overall project are:</p>
+<ul>
+<li><a href="#maps-of-betweenness-centrality">Vertex betweenness and edge betweenness</a> maps where it seems clear that the most informative measure is the raw betweenness not any normalised derivative from it.</li>
+<li>Imposing cutoff costs on the betweenness calculation is a refinement left for <a href="../notebooks/07-compute-times-of-hiking-network-analysis.html">a later notebook</a>, where it seems clear for both theoretical reasons (route planning is performed hour by hour in the field), and practical ones (calculation is MUCH faster) betweenness centrality with imposed cost cutoff settings are the most useful graph analytic output for this project.
+<hr></li>
+</ul>
 <p>The primary purpose of this notebook is to show the overall workflow for making a map of potential impacts from scientists moving around in the Dry Valleys, based on slope, landcover, and hiking function inputs. The workflow is shown with respect to the 5th largest area of contiguous rocky (rocks and/or gravels) cover — an area of about 320 sq.km, at a resolution of 100m.</p>
 <p>Much of this code is in previous notebooks in similar form, but pointing here to different data resources, and once final inputs (primarily landcover costs and a hiking function) are determined, can be automated to run on several zones across all of the Dry Valleys.</p>
 <div class="cell">
@@ -365,6 +384,7 @@ Update History
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="fu">str_glue</span>(<span class="st">"{here()}/scripts/raster-to-graph-functions.R"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
 <section id="set-up-folders-and-some-base-parameters" class="level2">
 <h2 class="anchored" data-anchor-id="set-up-folders-and-some-base-parameters">Set up folders and some base parameters</h2>
 <p>The set up of data subfolders under the top level <code>_data</code> folder is:</p>
@@ -1193,7 +1213,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"loop":false,"openEffect":"zoom","selector":".lightbox","closeEffect":"zoom","descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","closeEffect":"zoom","descPosition":"bottom","loop":false});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
