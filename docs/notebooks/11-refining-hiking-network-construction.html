@@ -368,6 +368,8 @@ Update History
 </table>
 <p>Additionally, the basename for all files is <code>dry-valleys</code>, with DEM resolution used (<code>32m</code> or <code>10m</code>) and the nominal hiking network resolution (without the <code>m</code>), which is likely to be <code>100</code> included in various output files as appropriate.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>dem_resolution     <span class="ot">&lt;-</span> <span class="st">"32m"</span> <span class="co"># 10m also available, but probably not critical</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>resolution         <span class="ot">&lt;-</span> <span class="dv">100</span>   <span class="co"># 100 is high res for rapid iterating: use 200 while testing</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>impassable_geology <span class="ot">&lt;-</span> <span class="st">"ice"</span></span>
@@ -381,6 +383,7 @@ Update History
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>basename           <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"dry-valleys"</span>)</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>dem_file           <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{dem_folder}/{basename}-combined-{dem_resolution}-dem-clipped.tif"</span>)</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>geologies_file     <span class="ot">&lt;-</span> <span class="fu">str_glue</span>(<span class="st">"{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 </div>
 </section>
 <section id="load-the-terrain-and-crop-to-the-extent" class="level2">
@@ -401,18 +404,16 @@ Update History
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>(<span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="co"># this is for plotting in ggplot</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>It’s handy to make a couple of basemaps here</p>
+<p>It’s handy to make a basemap here</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>hillshade_basemap <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(shade) <span class="sc">+</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_raster</span>(<span class="at">data =</span> shade, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> hillshade), <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span> </span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_distiller</span>(<span class="at">palette =</span> <span class="st">"Greys"</span>, <span class="at">direction =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">fill =</span> <span class="st">"none"</span>) <span class="sc">+</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotation_scale</span>(<span class="at">plot_unit =</span> <span class="st">"m"</span>, <span class="at">height =</span> <span class="fu">unit</span>(<span class="fl">0.1</span>, <span class="st">"cm"</span>)) <span class="sc">+</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_void</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+<p>Make a hex lattice of points or retrieve one made previously.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -449,7 +450,7 @@ Bounding box:  xmin: 424655.2 ymin: -1262612 xmax: 452755.2 ymax: -1233391
 Projected CRS: WGS 84 / Antarctic Polar Stereographic</code></pre>
 </div>
 </div>
-<p>Attach elevation values to it from the <code>terrain</code> data.</p>
+<p>Attach elevation values to the points from the <code>terrain</code> data.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -974,7 +975,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","selector":".lightbox","loop":false,"descPosition":"bottom","closeEffect":"zoom"});
+<script>var lightboxQuarto = GLightbox({"selector":".lightbox","loop":false,"closeEffect":"zoom","descPosition":"bottom","openEffect":"zoom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
