@@ -16,3 +16,4 @@ _dev/
 *.Rproj
 /.quarto/
 *.zip
+.vscode/settings.json
