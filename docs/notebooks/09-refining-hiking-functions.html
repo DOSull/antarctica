@@ -336,6 +336,10 @@ Update History
 <div id="callout-1" class="callout-1-contents callout-collapse collapse">
 <div class="callout-body-container callout-body">
 <table class="table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 80%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Date</th>
@@ -344,18 +348,22 @@ Update History
 </thead>
 <tbody>
 <tr class="odd">
+<td style="text-align: left;">2024-11-15</td>
+<td style="text-align: left;">Corrected minor error in transcribing final hiking function constants.</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">2024-09-26</td>
 <td style="text-align: left;">Added an executive summary.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-09-23</td>
 <td style="text-align: left;">Finalised the hiking function for use.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td style="text-align: left;">2024-09-19</td>
 <td style="text-align: left;">Detailed the commentary.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td style="text-align: left;">2024-09-16</td>
 <td style="text-align: left;">Initial post.</td>
 </tr>
@@ -861,20 +869,20 @@ Number of iterations to convergence: 5
 Achieved convergence tolerance: 1.49e-08</code></pre>
 </div>
 </div>
-<p>noting that the Gaussian form is <span class="math inline">\(\frac{1}{\sqrt{2\pi\sigma^2}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\)</span>, calculating out all the constants, are given by</p>
+<p>noting that the Gaussian form is <span class="math inline">\(\frac{1}{\sigma\sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\)</span>, calculating out all the constants, are given by</p>
 <p><span class="math display">\[
 \begin{eqnarray}
-v_{\mathrm{moraine}} &amp; = &amp; 4.166092\,e^{-\frac{(s+0.05259)^2}{0.2363969}} \\
-v_{\mathrm{rock}} &amp; = &amp; 3.763617\,e^{-\frac{(s+0.1188)^2}{0.3649997}}
+v_{\mathrm{moraine}} &amp; = &amp; 4.169969\,e^{-\frac{(s+0.05259)^2}{0.235957}} \\
+v_{\mathrm{rock}}    &amp; = &amp; 3.763969\,e^{-\frac{(s+0.1188)^2}{0.364931}}
 \end{eqnarray}
 \]</span></p>
 <p>And here is a function implementing this</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>est_hiking_function <span class="ot">&lt;-</span> <span class="cf">function</span>(slope, <span class="at">terrain =</span> <span class="st">"moraine"</span>) {</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (terrain <span class="sc">==</span> <span class="st">"moraine"</span>) {</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="fl">4.166092</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>(slope <span class="sc">+</span> <span class="fl">0.05259</span>) <span class="sc">^</span> <span class="dv">2</span> <span class="sc">/</span> <span class="fl">0.2363969</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="fl">4.166969</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>(slope <span class="sc">+</span> <span class="fl">0.05259</span>) <span class="sc">^</span> <span class="dv">2</span> <span class="sc">/</span> <span class="fl">0.235957</span>)</span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fl">3.763617</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>(slope <span class="sc">+</span> <span class="fl">0.1188</span>) <span class="sc">^</span> <span class="dv">2</span> <span class="sc">/</span> <span class="fl">0.3649997</span>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fl">3.763969</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>(slope <span class="sc">+</span> <span class="fl">0.1188</span>) <span class="sc">^</span> <span class="dv">2</span> <span class="sc">/</span> <span class="fl">0.364931</span>)</span>
 <span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -1387,7 +1395,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>var lightboxQuarto = GLightbox({"selector":".lightbox","openEffect":"zoom","closeEffect":"zoom","loop":false,"descPosition":"bottom"});
+<script>var lightboxQuarto = GLightbox({"openEffect":"zoom","closeEffect":"zoom","selector":".lightbox","loop":false,"descPosition":"bottom"});
 window.onload = () => {
   lightboxQuarto.on('slide_before_load', (data) => {
     const { slideIndex, slideNode, slideConfig, player, trigger } = data;
