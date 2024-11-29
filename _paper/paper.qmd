@@ -1,0 +1,197 @@
+---
+title: Modelling potential environmental impacts of science activity in Antarctica
+author: 
+  - name: David O’Sullivan
+    email: david.osullivan@auckland.ac.nz
+    affiliations:
+      - name: University of Auckland
+        url: https://profiles.auckland.ac.nz/david-osullivan
+      - name: Geospatial Stuff 
+        url: https://dosull.github.io
+  - name: Fraser J. Morgan
+    affiliations: 
+      - name: Manaaki Whenua Landcare Research 
+        url: https://landcareresearch.co.nz
+bibliography: antarctica.bib
+csl: the-canadian-geographer.csl
+format: 
+  html:
+    toc: true
+    number-sections: true
+    number-depth: 3
+    self-contained: true
+  pdf:
+    documentclass: article
+    classoption: [11pt]
+    toc: false
+    number-sections: true
+    number-depth: 3
+execute:
+  echo: false
+  warning: false
+  results: false
+  message: false
+---
+
+### Abstract {.unnumbered}
+We use GPS data collected on a science expedition in Antarctica to estimate hiking functions for the speed at which humans traverse terrain differentiated by slope and by ground cover (moraines and rock). We use the estimated hiking functions to build weighted directed graphs as a representation of specific environments in Antarctica. From these we estimate using a variety of graph metrics—particularly betweennness centrality—the relative potential for human environmental impacts arising from scientific activities in those environments. We also suggest a simple approach to planning science expeditions that might allow for reduced impacts in these environments.
+
+## Introduction
+Overview of Antarctic science since when and where, its intensity etc. Background on international treaties, etc.
+
+Relevant findings as to human impacts in Antarctica. 
+Note that in this environment even ‘leave only footprints’ is likely impacting the environment in significant ways.
+
+Overview of sections ahead.
+
+## Our approach and related work
+We chose to explore the question of where human impacts are likely to be strongest using an approach closely related to work on patterns of human movement in archaeology [@Verhagen2019] where likely and potential movement paths of humans across landscapes have been used to infer the settlement structure and human geography of large-scale landscapes. 
+Closely related work in biology investigates the structure and geography of animal transportation networks [@Perna2014]. 
+Both approaches rely on the idea that humans or animals move around in an environment in time or energy efficient ways. 
+These approaches rely on hiking functions that relate speed of movement across a terrain to its slope.
+
+Hiking functions must be applied in some context where locations across a landscape are connected to one another. 
+Because hiking functions are asymmetric, with estimated speed of movement up slopes different than estimated speeds down the same slope, landscape must be represented in a way that allows for this asymmetry. 
+We therefore represent terrain in our landscapes as directed graphs (or network) of connections between locations regularly distributed in planimetric space across the landscape of interest. 
+Because the graphs are directed the costs associated with movement between two locations can be different depending on the direction of movement. 
+Additionally, we associate with locations (i.e., vertices in the graph) the ground cover at the location, which also affects the speed at which it can be traversed. 
+Because the ground cover in the Antarctic environments under study can be broadly categorised into only two types, moraine and rock, we use the ground cover of a location to switch between two estimated hiking functions, rather than the more widely used approach of penalising movement on different ground covers by applying cost factors. 
+We consider previous work on hiking functions and directed graphs in more detail below.
+
+### Hiking functions
+@Prisner2023 provide an overview of a variety of functions that have been used to model how hiking times and speeds vary with terrain slope. 
+They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010;@Deutscher2011]. 
+These functions estimate the time taken to travel 1km, referred to as _pace_, based on slope expressed as _rise over run_, that is change in elevation divided by horizontal distance. 
+They are all piecewise functions with sharp changes in estimated pace at specific slopes.
+
+Alongside these hiking pace functions @Prisner2023 also present hiking speed functions (generally referred to as simply _hiking functions_) from Tobler [-@Tobler1993 generally considered the first hiking function] and more recent, related but more firmly empirically grounded alternatives offered by @Marquez-Perez2017, @Irmischer2018, and @Campbell2019. Another hiking function not discussed by @Prisner2023 is presented by @Rees2004. 
+These hiking functions are all continuous in the slope of the terrain so that $v=f(\theta)$, where $v$ is the speed, and $\theta$ is the slope. 
+They can all be parameterised to control the maximum speed attainable, the slope at which maximum speed is attained (expected to be a shallow downhill slope), and the rate at which speed falls off with increasing slope. 
+
+The functional form of some of these functions is shown in @tbl-hiking-function-equations and graphed in @fig-hiking-functions. 
+The parameterisation of the functions in @fig-hiking-functions have been chosen for illustrative purposes only, although the parameter values for the Exponential hiking function shown are $v=6e^{-3.5\left|\theta+0.05\right|}$ as suggested in @Tobler1993.
+As has been noted elsewhere [see @Herzog2010;@Campbell2019] these parameter settings for the Tobler function are based on a loose fit with secondary data on hiking speeds presented in Imhof [-@Imhof1950, pp. 217-220], although these exact values are frequently applied in the literature.
+
+| Description | Equation   | Examples
+|:------------|------------|:--------
+|Exponential  | $ae^{b\left|\theta-c\right|}$ | @Tobler1993, @Marquez-Perez2017
+| Gaussian    | $ae^{-b(\theta-c)^2}$ | @Irmischer2018, @Campbell2019
+| Lorentz     | $\frac{a}{\left[b+d(\theta-c)^2\right]}$ | @Campbell2019
+| Quadratic   | $a+b\theta+c\theta^2$ | @Rees2004
+
+: Functional forms of hiking functions {#tbl-hiking-function-equations .striped tbl-colwidths="[20,20,80]"}
+
+```{r}
+#| label: fig-hiking-functions
+#| fig-cap: Hiking functions.
+
+library(ggplot2)
+library(cols4all)
+library(tidyr)
+library(dplyr)
+
+theme_set(theme_minimal())
+
+tobler <- function(theta, a = 6, b = 3.5, c = -0.05) {
+  a * exp(-b * abs(theta - c))
+}
+gaussian <- function(theta, a = 5.5, b = 0.35, c = -0.04) {
+  a * exp(-(theta - c) ^ 2 / b ^ 2)
+}
+
+lorentz <- function(theta, a = 5.25, b = 1, c = -0.06, d = 10) {
+  a / (b + d * (theta - c) ^ 2)
+}
+  
+rees <- function(theta, a = 5.25, b = -1.5, c = -16) {
+  5 + b * theta + c * theta ^ 2
+}
+
+results <- tibble(Slope = -50:50/100,
+                  Tobler = tobler(Slope), 
+                  Gaussian = gaussian(Slope),
+                  Lorentz = lorentz(Slope),
+                  Rees = rees(Slope)) |>
+  pivot_longer(cols = -1) |>
+  rename(Function = name, `Speed, km/h` = value)
+
+ggplot(results) +
+  geom_line(aes(x = Slope, y = `Speed, km/h`, colour = Function, group = Function)) +
+  scale_colour_discrete_c4a_cat("brewer.set1")
+```
+
+An additional example is offered by @Wood2023 who include the local gradient of the terrain (i.e. the maximum slope at each location, not the slope in the direction of movement) as a parameter in the function.
+
+There is no generally accepted preferred form for hiking functions, although Tobler’s function has been the most widely used.
+
+Note the strange origin of the popular exponential Tobler function (in a working paper, based on data in a figure in a relatively obscure Swiss book from 1950, and... according to Herzog 2010 a very poor fit to those data in any case...)
+
+Edge costs in graphs modelled based on slope and a hiking function
+
+### Representing the landscape
+Terrain is asymmetric with respect to movement, therefore: landscapes as graphs 
+
+Movement cost for graph edges derived from hiking functions
+
+Graph vertices augmented with landcover information (in this context limited to surface geology)
+
+## Data sources
+### Antarctic geospatial data
+@Cox2023, @Cox2023a, @Felden2023
+
+[FIGURE showing location information etc., based on these data]
+
+### GPS data from an expedition
+
+Devices used, and associated protocols for scientists while on site.
+
+[FIGURE showing GPS traces in context] 
+
+Initial filtering to remove implausibly high-speed movement fixes – these largely related to helicopter movements and arrival/departure from the valley.
+
+Additional cleanup of GPS data required: filtering to remove many GPS fixes with associated low movement rates associated with time spent at base camps, rest stops, or experimental sites.
+
+Crude filters: short distances between fixes, large turn angles between fixes, and seemingly anomalous high speeds recorded at 0 slope angles (yet to be explained but required to obtain reasonable results).
+
+Density-based filtering: hexbinning of fixes to identify non-purposive movement areas.
+
+[FIGURE showing filtering steps and impact on slope vs speed scatterplot/boxplots]
+
+## Methods and results 
+### Hiking functions
+Fit three alternative functional forms: exponential Tobler (1993, pp 1–4, based on data from Imhof 1950), Gaussian Irmischer and Clarke (2018), and Student’s t distribution, the last of these as a heavier-tailed alternative to Gaussian. Other approaches rely on rule-of-thumb hiking time calculations such as...
+
+The Gaussian form offered the best overall fits to our data. Although Tobler’s exponential form is much used it is somewhat implausible that hiking speeds would peak sharply at a very specific slope angle, and so we adopt the Gaussian form.
+
+[FIGURE showing hiking function fits about here]
+
+In previous work researchers have applied a ground cover penalty cost to a base hiking function to estimate traversal times. In our case there are effectively only two terrain types, moraines (gravel) and bare rock. This makes the option of fitting different functions to each attractive and reasonable, and the results of fitting distinct functions to each support this approach. The peak speed on bare rock is attained on steeper downhill slopes than on gravel, perhaps indicative of the greater care required on downhill gravel slopes. Meanwhile the highest speeds on level terrain are attained on gravel. Our fitted functions are shown below.
+
+[FIGURE comparing moraine and rock hiking functions about here]
+
+### Landscapes as graphs
+Assignment of nodes as a lattice of equally spaced locations. Choice of rectangular/square grid vs. hexagonal. Square grids are easily generated and also offer some computational advantages if, for example, the grid is aligned with an underlying digital elevation model (DEM). However, square grids present the problem of choosing between two different potential local neighbourhoods, based on orthogonal adjacency only, or on orthogonal and diagonal adjacency (respectively referred to as rook and queen’s case adjacency, or as von Neumann and Moore neighbourhoods, in the spatial analysis and cellular automaton literatures). Excluding diagonal adjacency yields implausible diamond shaped isochrones on level terrain. Including diagonal adjacency can lead to seemingly contradictory results when alternate corners of a square are at different heights.
+
+Given these challenges we adopt a hexagonally arranged triangular lattice. This avoids any difficulties with varying distances (i.e. network edge lengths) between nodes. Note that this is necessarily an approximation, and on extensive flat terrains will yield unrealistic hexagonal isochrones. It also presents some computational disadvantages in assigning elevations to graph nodes where interpolation of heights is required due to mismatches between hexagon centres and cells in grid-based DEMs. 
+
+[FIGURE showing square and hexagonal lattices and issues] 
+
+Alternative approaches might estimate movement based on generating multiple random approximately evenly spaced nodes across a terrain and combining the resulting estimated travel times [see @Etherington2012], or deploying methods for estimating geodesics on complex triangular meshes [@Martinez2005] but both approaches are more computationally demanding than the current application justifies. In any case, the latter method does not allow for asymmetry in traversal times as arising due to slopes.
+
+We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. Graphs are stored as igraph package [@csardi2006igraph;@Csardi2024] graph objects for further analysis.
+
+How terrain is handled in graph edge cost estimation (i.e., assigning half the cost from the terrain at the vertex at each end of the edge).
+
+`igraph` implements betweenness centrality measures [@Freeman1978;@Brandes2001], which we used to identify vertices and/or edges most likely to be traversed by minimum travel time routes across the terrain.
+
+### Betweenness centrality limited by radius.
+
+### Impact minimizing networks
+Tentative proposal for impact minimizing networks based on minimum spanning trees, but noting the issue with respect to directed graphs when these would more correctly be arborescences [@Korte2018a].
+
+## Discussion
+Blah
+
+## Conclusions
+Blah
+
