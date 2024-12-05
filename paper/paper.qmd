@@ -428,7 +428,7 @@ The study area.
 ### GPS data from an expedition
 **FRASER**: Timeline, devices used, and associated protocols for scientists while on site.
 
-GPS data were processed (see @fig-gps-processing) to make them better suited for use in the estimation of hiking functions.
+GPS data were processed to make them better suited for use in the estimation of hiking functions.
 
 The first processing step was to confirm the plausibility of the data, particularly the device-generated speed distance between fixes, and elevations associated with fixes.
 The challenges of post-processing GPS data are well documented and relate to issues with GPS drift which can lead to estimated non-zero movement speeds as a result of noise in the signal.
