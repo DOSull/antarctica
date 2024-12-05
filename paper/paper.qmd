@@ -18,6 +18,7 @@ lightbox: true
 format: 
   html:
     toc: true
+    # code-fold: true
     number-sections: true
     number-depth: 3
     self-contained: true
@@ -33,8 +34,12 @@ execute:
   warning: false
   results: false
   message: false
+  cache: true
+  freeze: auto
 ---
+
 ```{css, echo = FALSE}
+/* This is to make things easier to read in the HTML */
 p {color: black;}
 figcaption {color: black;}
 ```
@@ -48,6 +53,12 @@ library(tidyr)
 library(dplyr)
 library(igraph)
 library(sf)
+library(terra)
+library(akima)
+library(stringr)
+library(ggnewscale)
+# library(whitebox)
+library(ggspatial)
 ```
 
 ### Abstract {.unnumbered}
@@ -80,7 +91,7 @@ Additionally, we associate with locations (i.e., vertices in the graph) the grou
 Because the ground cover in the Antarctic environments under study can be broadly categorised into only two types, moraine and rock, we use the ground cover of a location to switch between two estimated hiking functions, rather than the more widely used approach of penalising movement on different ground covers by applying cost factors. 
 We consider previous work on hiking functions and directed graphs in more detail below.
 
-### Hiking functions
+### Hiking functions {#sec-hiking-functions}
 
 @Prisner2023 provide an overview of a variety of functions that have been used to model how hiking times and speeds vary with terrain slope. 
 They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010; @Deutscher2011]. 
@@ -92,23 +103,24 @@ Another hiking function not discussed by @Prisner2023 is presented by @Rees2004.
 These hiking functions are all continuous in the slope of the terrain so that $v=f(\theta)$, where $v$ is the speed, and $\theta$ is the slope. 
 They can all be parameterised to control the maximum speed attainable, the slope at which maximum speed is attained (expected to be a shallow downhill slope), and the rate at which speed falls off with increasing slope.
 
-The functional form of some of these functions is shown in @tbl-hiking-function-equations and graphed in @fig-hiking-functions.
+The functional forms of some hiking functions are shown in @tbl-hiking-function-equations and graphed in @fig-hiking-functions.
 
 | Description | Equation                                 | Examples                        |
-|:--------------------------|-------------------------|:------------------|
+|:-           |:-                                        |:-----                           |
 | Exponential | $ae^{b\left|\theta-c\right|}$            | @Tobler1993, @Marquez-Perez2017 |
 | Gaussian    | $ae^{-b(\theta-c)^2}$                    | @Irmischer2018, @Campbell2019   |
 | Lorentz     | $\frac{a}{\left[b+d(\theta-c)^2\right]}$ | @Campbell2019                   |
 | Quadratic   | $a+b\theta+c\theta^2$                    | @Rees2004                       |
 
-: Functional forms of hiking functions {#tbl-hiking-function-equations .striped tbl-colwidths="\[20,20,80\]"}
+: Functional forms of hiking functions {#tbl-hiking-function-equations .striped}
 
 ```{r}
 #| label: fig-hiking-functions
 #| fig-cap: "Example hiking functional forms: Exponential [@Tobler1993], Gaussian [@Irmischer2018], Lorentz [@Campbell2019], and Quadratic [@Rees2004]."
 
 theme_set(theme_minimal())
-theme_update(panel.border = element_rect(linewidth = 0.5, fill = NA))
+theme_update(
+  panel.border = element_rect(linewidth = 0.5, fill = NA))
 
 tobler <- function(theta, a = 6, b = 3.5, c = -0.05) {
   a * exp(-b * abs(theta - c))
@@ -143,9 +155,9 @@ ggplot(results) +
            angle = 90, hjust = 0, vjust = 0.6, label.size = 0)
 ```
 
-The parameterisations of the functions in @fig-hiking-functions have been chosen for illustrative purposes only, although the parameter values for the exponential function shown are $v=6e^{-3.5\left|\theta+0.05\right|}$ as suggested in @Tobler1993. 
-These parameters give *Tobler's hiking function* but, as has been noted elsewhere, [see @Herzog2010; @Campbell2019], are based on a poorly specified fit to secondary data on hiking speeds presented by Imhof [-@Imhof1950, pp. 217-220]. 
-Nevertheless these parameter values are widely applied in the literature.
+The parameterisations of the functions in @fig-hiking-functions have been chosen for illustrative purposes only, although the parameter values for the exponential function shown are such that $v=6e^{-3.5\left|\theta+0.05\right|}$ as suggested in @Tobler1993. 
+These parameters give *Tobler's hiking function* but, as has been noted elsewhere, [see @Herzog2010; @Campbell2019], are based on a poorly specified fit to secondary data on hiking speeds found in Imhof [-@Imhof1950, pp. 217-220]. 
+Nevertheless, these parameter values are widely applied in the literature.
 
 All these hiking functional forms are somewhat *ad hoc*. 
 They exhibit desirable, expected properties: a peak speed at a slope near zero, which we expect to be slightly negative (i.e., downhill), and continuously falling speeds as the slope deviates from the slope of peak speed. 
@@ -156,26 +168,37 @@ However, these are hard to implement, and we have adopted empirically-derived an
 This choice is based on available data and the goals of our study, where the relative cost of different potential routes in the landscape is more important than exact prediction of routes. 
 In practice, almost any function with the peaked form of those shown in @fig-hiking-functions is suited to our requirements.
 
-It is commonplace in many applications to also incorporate a penalty on movement contingent on landcover, especially for off-track or off-road movement. 
+It is commonplace in many applications to also incorporate a penalty on movement contingent on land cover, especially for off-track or off-road movement. 
 For example the speed attainable off-track in forested terrain might be only half that attainable in grasslands. 
-Unsurprisingly, there are no widely agreed landcover penalties, but see for example, those compiled by @Herzog2020. 
+Unsurprisingly, there are no widely agreed land cover penalties, but see for example, those compiled by @Herzog2020. 
 A hiking function derived by @Wood2023 includes the local gradient of the terrain (i.e., the maximum slope at each location, not the slope in the direction of movement) as a covariate in the estimated function. 
-It is possible that this kind of approach treating landcover as a categorical covariate in the estimation of more complex hiking functions might be more widely applied in future work. 
-In our application, because there are only two kinds of navigable landcover&mdash;moraine (or gravel) and rock&mdash;we chose instead to estimate two hiking functions, one for each landcover, and estimate movement costs conditional on the landcover present at each location. 
-This also has the advantage of allowing for differing effects of slope on speed due to landcover, where for example, gravel might allow more rapid movement on the level surfaces, but more rapidly reduce speed on slopes. 
+It is possible that this kind of approach including other spatial covariates, such as land cover (which would be a categorical variable in most cases) in the estimation of complex hiking functions might be more widely applied in future work. 
+In our application, because there are only two kinds of navigable land cover&mdash;moraine (or gravel) and rock&mdash;we chose instead to estimate two hiking functions, one for each land cover, and estimate movement costs conditional on the land cover at each location. 
+This also has the advantage of allowing for differing effects of slope on speed due to land cover, where for example, gravel might allow more rapid movement on the level surfaces, but more rapidly reduce speed on slopes. 
 Details of this approach are reported and discussed in @sec-hiking-function-estimation.
 
 ### Representing the landscape
-Hiking functions are usually asymmetric with respect to slope, with the highest attainable speed at a slight downhill slope. 
+A has been noted, hiking functions are usually asymmetric, with the highest attainable speed at a slight downhill slope. 
 This asymmetry means that unless analysis is focused on assessing movement cost from a single origin or to a single destination, it is necessary to represent the landscape in a way that can accommodate asymmetry. 
-We therefore represent the landscape as a directed graph. 
-Graph vertices are locations with associated elevation and landcover. 
-Graph edges are directed links between vertices for which a change in elevation between the start and end vertex can be calculated, and a slope derived, based on the elevation difference and horizontal distance between the vertices.
+We therefore represent the landscape as a directed graph $G(V,E)$ of vertices and directed edges connecting them.
+In this representaiton, graph vertices $v_i$ are locations with associated elevation and land cover. 
+Vertices minimally have spatial coordinates $(x_i,y_i)$, an elevation $z_i$, and a land cover, $C_i$:
 
-The most obvious way to derive such a graph is to assign each cell in a raster digital elevation model (DEM) to a graph vertex, so that graph vertices are arranged in a regular square grid or lattice. 
-This approach has been widely adopted **CITATIONS NEEDED HERE** 
-However, this still requires a decision to be made regarding the definition of graph edges, which can be thought of as _allowed moves_ between vertices. 
-Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's moves&mdash;are shown in @fig-lattice-adjacencies. Another option shown in the figure is to lay out a regular hexagonal grid of vertex locations and link each vertex with its six nearest neighbours.
+$$
+v_i=\left(x_i,y_i,z_i,C_i\right)
+$$ {#eq-vertex}
+
+Graph edges $e_{ij}=\left(v_i,v_j\right)$ are directed connections between vertices for which a change in elevation between the start and end vertex can be calculated, and a slope derived, based on the elevation difference, and the horizontal distance between the vertices.
+Thus the slope $\theta_{ij}$ of edge $e_ij$ is given by 
+
+$$
+\theta_{ij}=\frac{z_j-z_i}{\sqrt{(x_i-x_j)^2+(y_i-y_j)^2}}
+$$ {#eq-slope-of-edge}
+
+The obvious way to derive such a graph from spatial data is to assign each cell in a raster digital elevation model (DEM) to a graph vertex, so that graph vertices are arranged in a regular square grid or lattice, and this approach has been widely adopted. **CITATIONS NEEDED HERE** 
+However, this still requires a decision about how to define graph edges, which can be thought of in terms of _allowed moves_ between vertices. 
+Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's moves&mdash;are shown in @fig-lattice-adjacencies. 
+Another option shown in the figure is to lay out a regular hexagonal grid of vertex locations and link each vertex to its six nearest neighbours.
 
 ```{r}
 #| label: fig-lattice-adjacencies
@@ -184,8 +207,9 @@ Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's move
 #| fig-height: 7
 
 theme_set(theme_void()) 
-theme_update(plot.margin = unit(c(1, 1, 2, 1), "mm"),
-             plot.title = element_text(hjust = 0.5, vjust = 2))
+theme_update(
+  plot.margin = unit(c(1, 1, 2, 1), "mm"),
+  plot.title = element_text(hjust = 0.5, vjust = 2))
 
 get_graph_adjacencies <- function(G) {
   edges <- ends(G, E(G))
@@ -214,7 +238,7 @@ get_lattice <- function(dist, pts) {
     st_buffer(dist) |>
     st_contains(pts, sparse = FALSE) |>
     as.matrix() |>
-    graph_from_adjacency_matrix(mode = "undirected", diag = FALSE) |>
+    graph_from_adjacency_matrix(mode = "directed", diag = FALSE) |>
     set_vertex_attr("x", value = pts$x) |>
     set_vertex_attr("y", value = pts$y)
 }
@@ -231,7 +255,7 @@ get_graph_plot <- function(G, main, crs = 2193) {
     ggtitle(main))
 }
 
-grid_pts <- expand_grid(x = -5:5 * 100 + 1e6, y = -5:5 * 100 + 1e6) |>
+grid_pts <- expand_grid(x = -20:20 * 100 + 1e6, y = -20:20 * 100 + 1e6) |>
   as.data.frame() |>
   st_as_sf(coords = c("x", "y"), crs = 2193, remove = FALSE)
 
@@ -240,7 +264,7 @@ hex_grid_pts <- grid_pts |>
   st_make_grid(square = FALSE, what = "centers", cellsize = 107.457) |>
   st_as_sf() |>
   rename(geometry = x) |>
-  mutate(geometry = geometry + c(-9, -11)) |>
+  mutate(geometry = geometry + c(-12, -3)) |>
   st_set_crs(2193)
 
 xy <- hex_grid_pts |> st_coordinates()
@@ -260,20 +284,21 @@ for (n in names(graphs)) {
 ggarrange(plotlist = ggplots, ncol = 2, nrow = 2)
 ```
 
-The advantage of a square lattice is the ease of deriving vertex elevations assuming a DEM at the desired lattice spacing is available. 
-A hexagonal lattice on the other hand will usually require that elevation values be interpolated from a DEM to the lattice locations.
+The advantage of a square lattice is that is east to derive vertex elevations assuming a DEM at the desired lattice spacing is available. 
+A hexagonal lattice on the other hand usually requires that elevation values be interpolated from a DEM to the lattice locations.
 
-Both square and hexagonal lattices can lead to geometric artifacts when the allowed moves are used to determine contours of equal travel time or *isochrones* from an origin point. 
-On level terrain the Rook's move produces diamond-shaped isochrones, while the Queen's move produces octagons. 
+Both square and hexagonal lattices lead to geometric artifacts when the allowed moves are used to determine contours of equal travel time or *isochrones* from an origin point on a flat surface with uniform movement speeds. 
+In this situation, the Rook's move produces diamond-shaped isochrones, while the Queen's move produces octagons.
 In general isochrones will be polygons with as many sides as the number of neighbours of each vertex. 
-While the 16-gons of the Knight's move lattice are likely to be close enough to circular for many purposes, the resulting graph is much larger than the alternatives. @Etherington2012 suggests that by combining results from randomly generated planar graphs such geometric artifacts can be removed, but this substantially increases the computational requirements. Another computationally intensive approach might draw on methods for
- estimating geodesics on complex triangular meshes [@Martinez2005].
-Because the geometric effects of the graph structure are masked when we introduce varying movement speeds due to the slope of each edge, we do not consider these more complex approaches necessary in our application. 
+While the 16-gons of the Knight's move lattice are likely to be close enough to circular for many purposes, the resulting graph is denser than the alternatives. 
+@Etherington2012 suggests that by combining results from randomly generated planar graphs such geometric artifacts can be removed, but this substantially increases the computational requirements. 
+Another computationally intensive approach might draw on methods for estimating geodesics on complex triangular meshes [@Martinez2005].
+Because these geometric effects of graph structure are masked when we introduce varying movement speeds due to the slope of each edge, we do not consider these more complex approaches necessary in our application. 
 Nevertheless, more circular base isochrone shapes are to be preferred, all other things equal.
 
 A further complication when a lattice includes edges of varying length as in the Queen's and Knight's move lattices, is bias in the estimation of slopes leading to lower estimated movement costs for longer edges. 
 This is because longer edges (e.g., the knight's moves) may 'jump' across intervening segments of varying slope, smoothing them to a single slope estimate.
-Such smoothing will usually result in estimated speeds along that edge higher than those that would accumulate along the intervening sections of varying slope. 
+Such smoothing will usually result in shorter edge traversal times along such edges than those that would accumulate along intervening sections of varying slope. 
 This problem is discussed in a slightly different context by Campbell et al. [-@Campbell2019 pp. 96-98].
 
 Any choice of graph structure is necessarily a compromise, and estimates of movement rates are always an approximation [@Goodchild2020]. 
@@ -281,33 +306,216 @@ We consider the differing edge lengths introduced by all the square lattices oth
 
 Having settled on a hexagonal lattice for the graph structure, at a chosen resolution we set out a regular hexagonal grid of locations across the study area, and assign to each point an elevation by interpolation from a DEM. 
 Because the DEM is at finer resolution than the hexagonal lattice, the choice of interpolation method is not a major concern.
-Our approach applies a bilinear interpolation method based on elevation values in the DEM cell the graph vertex falls in and its four orthogonal neighbours.
-Based on the difference in elevation of the vertices at each end of each edge we estimate a slope, and also a traversal times using our estimated hiking function. 
-The important point here is that our graph is _directed_ so that different traversal times $t_{ij}$ and $t_{ji}$ are estimated for moving between locations $i$ to location $j$ depending on the direction of movement.
+Our approach applies bilinear interpolation based on elevation values in the DEM cell the graph vertex falls in and its four orthogonal neighbours.
+Based on the difference in elevation of the vertices at each end of each edge we estimate a slope using @eq-slope-of-edge, and also traversal times using our estimated hiking function. 
+The important point here is that our graph is _directed_ so that different traversal times $t_{ij}$ and $t_{ji}$ are estimated for moving between vertex $v_i$ and $v_j$ depending on the direction of travel.
 
-As noted in the previous section, we estimate two hiking functions, one for moraine and one for rock landcover. 
-When an edge connects locations of two different landcover types the estimated traversal time is the mean of the traversal times for each landcover. 
+As noted in the previous section, we estimate two hiking functions, one for moraine and one for rock land cover. 
+When an edge connects locations of two different land cover types the estimated traversal time is the mean of the traversal times for each land cover. 
 
 ## Data sources
 ### Antarctic geospatial data
-@Cox2023, @Cox2023a, @Felden2023
+Geospatial data for Antarctica were obtained from sources referenced in @Cox2023, @Cox2023a, and @Felden2023.
+The study area was defined to be the Skelton and Dry Valleys basins, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project [@Mouginot2017] and shown in @fig-locator-map.
+The Skelton basin was included because while the expedition GPS data was ostensibly collected in the McMurdo Dry Valleys, it actually extends into that basin as shown in @fig-study-area-map.
+Elevation data from the Reference Elevation Model of Antarctica project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-dem-and-geology.
+The five largest areas of contiguous non-ice surface geology across the study area shown in @fig-five-subregions were chosen to be the specific sites for more detailed exploration using the methods set out in this paper.
+These range in size from around 320 to 2600 square kilometres.
 
-\[FIGURE showing location information etc., based on these data\]
+```{r}
+#| output: false
+data_folder <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data"
+dem_folder  <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/dem"
+
+coastline <- st_read(str_glue("{data_folder}/coastline.gpkg"))
+basins <- st_read(str_glue("{dem_folder}/antarctic-basins.gpkg"))
+study_basins <- st_read(str_glue("{dem_folder}/dry-valleys-and-skelton.gpkg"))
+study_area <- st_read(str_glue("{dem_folder}/study-area-extent.gpkg"))
+gps_data <- st_read(str_glue("{data_folder}/cleaned-gps-data/all-gps-traces.gpkg"))
+tiles <- st_read(str_glue("{dem_folder}/REMA-index-included-tiles.gpkg"))
+shade <- rast(str_glue("{dem_folder}/32m/dry-valleys-combined-32m-browse.tif"))
+shade8 <- shade |>
+  terra::aggregate(8) |>
+  as.data.frame(xy = TRUE) |>
+  rename(shade = `15_35_32m_v2.0_browse`)
+geology <- st_read(str_glue("{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg"))
+contiguous_geologies <- st_read(str_glue("{data_folder}/dry-valleys/common-inputs/contiguous-geologies.gpkg"))
+```
+
+::: {#fig-study-area layout="[[50,-1,50], [50,-1,50]]"}
+
+```{r}
+#| label: fig-locator-map
+#| fig-cap: "Study area location in Antarctica"
+theme_set(theme_minimal())
+theme_update(
+  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5),
+  panel.grid = element_line(colour = "black", linewidth = 0.05),
+  panel.ontop = TRUE
+)
+bb1 <- st_bbox(study_area)
+ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
+  geom_sf(data = study_area, fill = "#666666", colour = "white") +
+  annotate("rect", xmin = bb1[1], ymin = bb1[2], 
+                   xmax = bb1[3], ymax = bb1[4], fill = "#00000000", colour = "red", lwd = 0.25)
+```
+
+```{r}
+#| label: fig-study-area-map
+#| fig-cap: "Skelton and Dry Valleys basins"
+theme_set(theme_void())
+theme_update(
+  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5)
+)
+ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#00000000") +
+  geom_sf(data = study_basins, fill = "gray", colour = "white") +
+  geom_sf(data = coastline, fill = "#00000000", colour = "#3182bd", lwd = 0.35) +
+  geom_sf(data = gps_data, colour = "red", size = 0.025) +
+  geom_sf_text(data = study_basins, aes(label = NAME)) +
+  coord_sf(xlim = bb1[c(1, 3)], ylim = bb1[c(2, 4)]) +
+  annotation_scale(height = unit(0.1, "cm"), location = "tr") +
+  annotation_north_arrow(style = north_arrow_minimal, which_north = "true", location = "br")
+```
+
+```{r}
+#| label: fig-dem-and-geology
+#| fig-cap: "Study area elevation (hillshade) and surface geology"
+theme_set(theme_void())
+theme_update(
+  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5),
+  legend.position = c(0.02, 0.02),
+  legend.justification = c(0, 0)
+)
+top5 <- contiguous_geologies |> 
+  arrange(desc(area)) |> 
+  slice(1:5)
+bb2 <- st_bbox(top5)
+ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd", lwd = 0.35) +
+  geom_sf(data = study_area, fill = "#00000000", colour = "darkblue", lwd = 0.35) +
+  geom_sf(data = geology, aes(fill = POLYGTYPE), linewidth = 0) +
+  scale_fill_manual(values = c("dodgerblue", "#fec44f", "#993404"), name = "Geology") + 
+  new_scale("fill") +
+  geom_raster(data = shade8, aes(x = x, y = y, fill = shade), alpha = 0.5) +
+  scale_fill_distiller(palette = "Blues", guide = "none") +
+  annotate("rect", xmin = bb2[1], ymin = bb2[2], 
+                   xmax = bb2[3], ymax = bb2[4], fill = "#00000000", 
+                   colour = "red", lwd = 0.25, linetype = "dashed") +
+  coord_sf(xlim = bb1[c(1, 3)], ylim = bb1[c(2, 4)])
+```
+
+```{r}
+#| label: fig-five-subregions
+#| fig-cap: "Five sub-regions of contiguous surface geology"
+theme_set(theme_void())
+theme_update(
+  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5)
+)
+ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
+  geom_sf(data = contiguous_geologies, fill = "#eeeeee", colour = "darkgrey") +
+  geom_sf(data = top5, fill = "#fcbba1", colour = "black", linewidth = 0.25) +
+  guides(fill = "none") +
+  annotation_scale(height = unit(0.1, "cm")) +
+  coord_sf(xlim = bb2[c(1, 3)], ylim = bb2[c(2, 4)])
+```
+
+The study area.
+:::
 
 ### GPS data from an expedition
-Devices used, and associated protocols for scientists while on site.
+**FRASER**: Timeline, devices used, and associated protocols for scientists while on site.
 
-\[FIGURE showing GPS traces in context\]
+GPS data were processed (see @fig-gps-processing) to make them better suited for use in the estimation of hiking functions.
 
-Initial filtering to remove implausibly high-speed movement fixes – these largely related to helicopter movements and arrival/departure from the valley.
+The first processing step was to confirm the plausibility of the data, particularly the device-generated speed distance between fixes, and elevations associated with fixes.
+The challenges of post-processing GPS data are well documented and relate to issues with GPS drift which can lead to estimated non-zero movement speeds as a result of noise in the signal.
+The raw GPS data included distance since last fix, speed, and elevation estimates and it was determined in all cases that the device generated results for these measurements were likely to be more reliable than post-processing the raw latitude-longitude fixes to calculate the values.
 
-Additional cleanup of GPS data required: filtering to remove many GPS fixes with associated low movement rates associated with time spent at base camps, rest stops, or experimental sites.
+The second processing step was to remove fixes associated with faster movement on other modes of transport than walking.
+@Wood2023 cite a number of previous works that base detection of trip segments based on recorded speeds.
+This method was trivially applicable to our data to a limited degree as scientists arrive at the expedition base camp and occasionally also travel on helicopters on trips to more remote experimental sites. 
 
-Crude filters: short distances between fixes, large turn angles between fixes, and seemingly anomalous high speeds recorded at 0 slope angles (yet to be explained but required to obtain reasonable results).
+The third, more challenging processing step was to deal with sequences of fixes associated with non-purposeful movement when scientists were in or around base camp, at rest stops, or at experimental sites. 
+Crude filters removed fixes with low recorded distances between fixes (less than 2.5 metres), high turn angles at the fix location (greater than 150&deg;), and fixes recorded on ice-covered terrain, but this didi not clean the data sufficiently for further analysis.
+An additional filtering step was to count fixes (across all scientists) in square grid cells and remove all fixes in grid cells with more than 50 fixes.
 
-Density-based filtering: hexbinning of fixes to identify non-purposive movement areas.
+This left one persistent concern: an over-representation of consecutive fixes recorded at exactly the same elevation, resulting in many fixes with estimated slopes of exactly 0, and leading to a clearly evident dip in estimated movement speeds at 0 slope (@fig-raw-gps-data). 
+It is likely that these fixes are associated with GPS device drift, so a it was decided to remove all fixes where estimated slope was exactly 0.
+@fig-filtered-gps-data shows the improvement in even a crudely estimated hiking function derived from local scatterplot (LOESS) smoothing.
+Note that such functions are likely overfitted and not used further in our analysis where we favour more easily parameterised functions such as those discussed in @sec-hiking-functions.
 
-\[FIGURE showing filtering steps and impact on slope vs speed scatterplot/boxplots\]
+```{r}
+#| output: false
+# gps data and its bbox
+gps_data <- st_read(str_glue("{data_folder}/cleaned-gps-data/all-gps-traces.gpkg"))
+bb <- gps_data |> st_bbox() # this is to allow plotting restricted to GPS extents
+
+# geologies data
+geologies <- 
+  st_read(str_glue("{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg")) |> 
+  dplyr::select(POLYGTYPE) |>
+  st_filter(bb |> st_as_sfc()) |> 
+  mutate(cover = factor(POLYGTYPE))
+
+# join geologies to the gps data
+gps_geol <- gps_data |>
+  st_join(geologies) |>
+  dplyr::select(-POLYGTYPE) |> 
+  # we do not further consider 'ice' terrain, or
+  # observations at negative elevations
+  filter(cover != "ice", height_m > 0) |>
+  mutate(slope_h_round = round(slope_h * 10) / 10) |>
+  drop_na()
+```
+
+::: {#fig-gps-data layout="[[50,-1,50]]"}
+
+```{r}
+#| label: fig-raw-gps-data
+#| fig-cap: "Boxplots by slope of speed, with smoothed estimated hiking function showing a 'dip' due to over-representation of 0 slope fixes"
+ggplot(gps_geol |> filter(slope_h >= -1, slope_h <= 1.0)) +
+  geom_boxplot(aes(x = round(slope_h, 1), y = speed_km_h, group = round(slope_h, 1)), 
+               outlier.size = 0.2, colour = "grey", linewidth = 0.5) +
+  stat_smooth(aes(x = slope_h, y = speed_km_h)) +
+  xlab("Slope, rise over run") + ylab("Speed, km/h") +
+  theme_minimal()
+```
+
+```{r}
+#| label: fig-filtered-gps-data
+#| fig-cap: "After filtering the estimated hiking function no longer has a dip."
+hexes <- gps_geol |> 
+  st_make_grid(cellsize = 100, square = FALSE, what = "polygons") |>
+  st_as_sf(crs = st_crs(gps_geol)) |>
+  rename(geom = x) |>
+  st_join(gps_geol |> mutate(id = row_number()), left = FALSE) |>
+  group_by(geom) |>
+  summarise(n = n(), n_persons = n_distinct(name)) |>
+  ungroup()
+
+gps_geol_purposive <- gps_geol |> 
+  # see above
+  filter(slope_h != 0) |>
+  # these two remove 'dithering'
+  filter(turn_angle < 150) |>
+  filter(distance_m > 2.5) |>
+  # remove fixes in densely trafficked areas
+  st_join(hexes) |>
+    filter(n <= 50)
+
+ggplot(gps_geol_purposive) +
+  geom_boxplot(aes(x = round(slope_h, 1), y = speed_km_h, group = round(slope_h, 1)), 
+               outlier.size = 0.2, colour = "grey", linewidth = 0.5) +
+  stat_smooth(aes(x = slope_h, y = speed_km_h)) +
+  xlab("Slope, rise over run") + ylab("Speed, km/h") +
+  theme_minimal()
+```
+
+GPS data and a crudely estimated hiking functions before and after filtering of the data.
+:::
 
 ## Methods and results
 
