@@ -45,6 +45,8 @@ figcaption {color: black;}
 ```
 
 ```{r}
+#| output: false
+
 library(ggplot2)
 library(ggpubr)
 library(grid)
@@ -57,9 +59,36 @@ library(terra)
 library(akima)
 library(stringr)
 library(ggnewscale)
-# library(whitebox)
 library(ggspatial)
 library(minpack.lm)
+
+home <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica"
+basename           <- "dry-valleys"
+dem_resolution     <- "32m" # 10m also available, but probably not critical
+resolution         <- 100   # 100 is high res for rapid iterating: use 200 while testing
+impassable_geology <- "ice"
+
+data_folder        <- str_glue("{home}/_data")
+dem_folder         <- str_glue("{data_folder}/dem")
+
+coastline          <- st_read(str_glue("{data_folder}/coastline.gpkg"))
+basins             <- st_read(str_glue("{dem_folder}/antarctic-basins.gpkg"))
+study_basins       <- st_read(str_glue("{dem_folder}/dry-valleys-and-skelton.gpkg"))
+study_area         <- st_read(str_glue("{dem_folder}/study-area-extent.gpkg"))
+gps_data           <- st_read(str_glue("{data_folder}/cleaned-gps-data/all-gps-traces.gpkg"))
+tiles              <- st_read(str_glue("{dem_folder}/REMA-index-included-tiles.gpkg"))
+shade              <- rast(str_glue("{dem_folder}/{dem_resolution}/dry-valleys-combined-{dem_resolution}-browse.tif"))
+shade8             <- shade |>
+  terra::aggregate(8) |>
+  as.data.frame(xy = TRUE) |>
+  rename(shade = `15_35_32m_v2.0_browse`)
+geology            <- st_read(str_glue("{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg"))
+contiguous_geologies <- st_read(str_glue("{data_folder}/{basename}/common-inputs/contiguous-geologies.gpkg"))
+
+base_folder        <- str_glue("{data_folder}/{basename}")
+dem_file           <- str_glue("{dem_folder}/{dem_resolution}/{basename}-combined-{dem_resolution}-dem-clipped.tif")
+
+source(str_glue("{home}/paper/raster-to-graph-functions-paper.R"))
 ```
 
 ### Abstract {.unnumbered}
@@ -78,7 +107,6 @@ Relevant findings as to human impacts in Antarctica. Note that in this environme
 Overview of sections ahead.
 
 ## Our approach and related work
-
 We chose to explore the question of where human impacts are likely to be strongest using an approach closely related to work on patterns of human movement in archaeology [@Verhagen2019] where likely and potential movement paths of humans across landscapes have been used to infer the settlement structure and human geography of large-scale landscapes. 
 Closely related work in biology investigates the structure and geography of animal transportation networks [@Perna2014]. 
 Both approaches rely on the idea that humans or animals move around in an environment in time or energy efficient ways. 
@@ -93,7 +121,6 @@ Because the ground cover in the Antarctic environments under study can be broadl
 We consider previous work on hiking functions and directed graphs in more detail below.
 
 ### Hiking functions {#sec-hiking-functions}
-
 @Prisner2023 provide an overview of a variety of functions that have been used to model how hiking times and speeds vary with terrain slope. 
 They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010; @Deutscher2011]. 
 These functions estimate the time taken to travel 1km, referred to as *pace*, based on slope expressed as *rise over run*, that is change in elevation divided by horizontal distance. 
@@ -212,28 +239,6 @@ theme_update(
   plot.margin = unit(c(1, 1, 2, 1), "mm"),
   plot.title = element_text(hjust = 0.5, vjust = 2))
 
-get_graph_adjacencies <- function(G) {
-  edges <- ends(G, E(G))
-  list(i = edges[, 1], j = edges[, 2])
-}
-
-make_linestring <- function(x1, y1, x2, y2) {
-  st_linestring(matrix(c(x1, y1, x2, y2), ncol = 2, byrow = TRUE))
-}
-
-get_graph_as_line_layer <- function(G, crs) {
-  ij <- get_graph_adjacencies(G)
-  i <- ij$i
-  j <- ij$j
-  edges_as_sf <- mapply(make_linestring, 
-                        V(G)$x[i], V(G)$y[i], V(G)$x[j], V(G)$y[j],
-                        SIMPLIFY = FALSE) |>
-    st_sfc() |>
-    st_as_sf(crs = crs) |>
-    rename(geometry = x)
-  edges_as_sf                      
-}
-
 get_lattice <- function(dist, pts) {
   pts |>
     st_buffer(dist) |>
@@ -319,29 +324,9 @@ When an edge connects locations of two different land cover types the estimated 
 Geospatial data for Antarctica were obtained from sources referenced in @Cox2023, @Cox2023a, and @Felden2023.
 The study area was defined to be the Skelton and Dry Valleys basins, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project [@Mouginot2017] and shown in @fig-locator-map.
 The Skelton basin was included because while the expedition GPS data was ostensibly collected in the McMurdo Dry Valleys, it actually extends into that basin as shown in @fig-study-area-map.
-Elevation data from the Reference Elevation Model of Antarctica project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-dem-and-geology.
+Elevation data from the Reference Elevation Model of Antarctica (REMA) project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-dem-and-geology.
 The five largest areas of contiguous non-ice surface geology across the study area shown in @fig-five-subregions were chosen to be the specific sites for more detailed exploration using the methods set out in this paper.
 These range in size from around 320 to 2600 square kilometres.
-
-```{r}
-#| output: false
-data_folder <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data"
-dem_folder  <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica/_data/dem"
-
-coastline <- st_read(str_glue("{data_folder}/coastline.gpkg"))
-basins <- st_read(str_glue("{dem_folder}/antarctic-basins.gpkg"))
-study_basins <- st_read(str_glue("{dem_folder}/dry-valleys-and-skelton.gpkg"))
-study_area <- st_read(str_glue("{dem_folder}/study-area-extent.gpkg"))
-gps_data <- st_read(str_glue("{data_folder}/cleaned-gps-data/all-gps-traces.gpkg"))
-tiles <- st_read(str_glue("{dem_folder}/REMA-index-included-tiles.gpkg"))
-shade <- rast(str_glue("{dem_folder}/32m/dry-valleys-combined-32m-browse.tif"))
-shade8 <- shade |>
-  terra::aggregate(8) |>
-  as.data.frame(xy = TRUE) |>
-  rename(shade = `15_35_32m_v2.0_browse`)
-geology <- st_read(str_glue("{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg"))
-contiguous_geologies <- st_read(str_glue("{data_folder}/dry-valleys/common-inputs/contiguous-geologies.gpkg"))
-```
 
 ::: {#fig-study-area layout="[[50,-1,50], [50,-1,50]]"}
 
@@ -451,12 +436,10 @@ Note that such functions are likely overfitted and not used further in our analy
 ```{r}
 #| output: false
 # gps data and its bbox
-gps_data <- st_read(str_glue("{data_folder}/cleaned-gps-data/all-gps-traces.gpkg"))
 bb <- gps_data |> st_bbox() # this is to allow plotting restricted to GPS extents
 
 # geologies data
-geologies <- 
-  st_read(str_glue("{data_folder}/ata-scar-geomap-geology-v2022-08-clipped.gpkg")) |> 
+geologies <- geology |> 
   dplyr::select(POLYGTYPE) |>
   st_filter(bb |> st_as_sfc()) |> 
   mutate(cover = factor(str_to_title(POLYGTYPE)))
@@ -515,7 +498,7 @@ ggplot(gps_geol_purposive) +
   theme_minimal()
 ```
 
-GPS data and crudely estimated hiking functions before and after filtering the to remove fixes associated iwht non-purposive movement.
+GPS data and crudely estimated hiking functions before and after filtering the to remove fixes associated with non-purposive movement.
 :::
 
 ## Methods and results
@@ -612,91 +595,6 @@ input_data <- input_data |>
 ```{r}
 #| output: false
 
-# see https://rmazing.wordpress.com/2013/08/14/predictnls-part-1-monte-carlo-simulation-confidence-intervals-for-nls-models/
-predictNLS <- function(object, newdata, level = 0.95, nsim = 10000, ...) {
-  require(MASS, quietly = TRUE)
-  ## get right-hand side of formula
-  RHS <- as.list(object$call$formula)[[3]]
-  EXPR <- as.expression(RHS)
-  ## all variables in model
-  VARS <- all.vars(EXPR)
-  ## coefficients
-  COEF <- coef(object)
-  ## extract predictor variable    
-  predNAME <- setdiff(VARS, names(COEF))  
-  ## take fitted values, if 'newdata' is missing
-  if (missing(newdata)) {
-    newdata <- eval(object$data)[predNAME]
-    colnames(newdata) <- predNAME
-  }
-  ## check that 'newdata' has same name as predVAR
-  if (names(newdata)[1] != predNAME) stop("newdata should have name '", predNAME, "'!")
-  ## get parameter coefficients
-  COEF <- coef(object)
-  ## get variance-covariance matrix
-  VCOV <- vcov(object)
-  ## augment variance-covariance matrix for 'mvrnorm' 
-  ## by adding a column/row for 'error in x'
-  NCOL <- ncol(VCOV)
-  ADD1 <- c(rep(0, NCOL))
-  ADD1 <- matrix(ADD1, ncol = 1)
-  colnames(ADD1) <- predNAME
-  VCOV <- cbind(VCOV, ADD1)
-  ADD2 <- c(rep(0, NCOL + 1))
-  ADD2 <- matrix(ADD2, nrow = 1)
-  rownames(ADD2) <- predNAME
-  VCOV <- rbind(VCOV, ADD2) 
-  ## iterate over all entries in 'newdata' as in usual 'predict.' functions
-  NR <- nrow(newdata)
-  respVEC <- numeric(NR)
-  seVEC <- numeric(NR)
-  varPLACE <- ncol(VCOV)   
-  ## define counter function
-  counter <- function (i) {
-    if (i%%10 == 0) 
-      cat(i)
-    else cat(".")
-    if (i%%50 == 0) 
-      cat("\n")
-    flush.console()
-  }
-  outMAT <- NULL 
-  for (i in 1:NR) {
-    counter(i)
-    ## get predictor values and optional errors
-    predVAL <- newdata[i, 1]
-    if (ncol(newdata) == 2) predERROR <- newdata[i, 2] else predERROR <- 0
-    names(predVAL) <- predNAME  
-    names(predERROR) <- predNAME  
-    ## create mean vector for 'mvrnorm'
-    MU <- c(COEF, predVAL)
-    ## create variance-covariance matrix for 'mvrnorm'
-    ## by putting error^2 in lower-right position of VCOV
-    newVCOV <- VCOV
-    newVCOV[varPLACE, varPLACE] <- predERROR^2
-    ## create MC simulation matrix
-    simMAT <- mvrnorm(n = nsim, mu = MU, Sigma = newVCOV, empirical = TRUE)
-    ## evaluate expression on rows of simMAT
-    EVAL <- try(eval(EXPR, envir = as.data.frame(simMAT)), silent = TRUE)
-    if (inherits(EVAL, "try-error")) stop("There was an error evaluating the simulations!")
-    ## collect statistics
-    PRED <- data.frame(predVAL)
-    colnames(PRED) <- predNAME   
-    FITTED <- predict(object, newdata = data.frame(PRED))
-    MEAN.sim <- mean(EVAL, na.rm = TRUE)
-    SD.sim <- sd(EVAL, na.rm = TRUE)
-    MEDIAN.sim <- median(EVAL, na.rm = TRUE)
-    MAD.sim <- mad(EVAL, na.rm = TRUE)
-    QUANT <- quantile(EVAL, c((1 - level)/2, level + (1 - level)/2))
-    RES <- c(FITTED, MEAN.sim, SD.sim, MEDIAN.sim, MAD.sim, QUANT[1], QUANT[2])
-    outMAT <- rbind(outMAT, RES)
-  }
-  colnames(outMAT) <- c("fit", "mean", "sd", "median", "mad", names(QUANT[1]), names(QUANT[2]))
-  rownames(outMAT) <- NULL
-  cat("\n")
-  return(outMAT)  
-}
-
 conf <- 0.95
 pred1 <- predictNLS(models[["Moraine"]][["Gaussian"]], newdata = slopes, level = conf) |>
   as.data.frame() |>
@@ -717,27 +615,228 @@ Plotting both functions in the same graph makes clearer the difference in maximu
 #| label: fig-models-by-cover-compared
 #| fig-cap: The hiking functions for All, Moraine and Rock ground covers compared, including 95% confidence intervals derived by Monte-Carlo simulation.
 ggplot() +
-  geom_ribbon(data = predictions |> filter(cover != "All"), 
-              aes(x = x, ymin = `2.5%`, ymax = `97.5%`, group = cover, fill = cover), 
-              alpha = 0.35, linewidth = 0) + 
-  scale_fill_brewer(palette = "Set1", name = "Cover") +
   geom_ribbon(data = predictions |> filter(cover == "All"), 
               aes(x = x, ymin = `2.5%`, ymax = `97.5%`), 
               colour = "black", lty = "dashed", fill = "#00000000", linewidth = 0.35) +
-  geom_line(data = predictions |> filter(cover == "All"), aes(x = x, y = mean, colour = cover)) +
+  # geom_line(data = predictions |> filter(cover == "All"), aes(x = x, y = mean, colour = cover)) +
   scale_colour_manual(name = "", breaks = c("All"), values = c("black")) +
+  geom_ribbon(data = predictions, 
+              aes(x = x, ymin = `2.5%`, ymax = `97.5%`, group = cover, fill = cover), 
+              alpha = 0.35, linewidth = 0) + 
+  scale_fill_manual(values = c("black", "firebrick", "dodgerblue"), name = "Cover") +
   xlab("Slope, rise over run") + ylab("Speed, km/h") +
   theme_minimal()
 ```
 
+The estimatedhiking functions associated with the two landcovers are
+$$
+\begin{array}{rcl}
+v_{\mathrm{moraine}} & = & 4.17\,\exp\left[{-\frac{(\theta+0.0526)^2}{0.236}}\right] \\
+v_{\mathrm{rock}}    & = & 3.76\,\exp\left[{-\frac{(\theta+0.119)^2}{0.365}}\right]
+\end{array}
+$$ {#eq-estimated-hiking-functions}
+
+where the different maximum speeds (in kilometres per hour) and slopes of maximum speed are apparent.
+
 ### Landscapes as graphs
-We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. Graphs are stored as igraph package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
+We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
+Graphs are manipulated as igraph package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
+An important decision in constructing graphs is choice of the spacing of the hexagonal lattice, and also of the underlying DEM from which graph vertex elevations are derived.
+Given the extent of the study sites (see @fig-five-subregions) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
+The hexagon centre to centre spacing of this lattice is given by 
+$$
+100\sqrt{\frac{2}{\sqrt{3}}}\approxeq 107.5\,\mathrm{metres}
+$$ {#eq-hex-lattice-resolution}
+Given this lattice resolution we interpolated vertex elevations from a 32m resolution DEM from the REMA project [@Howat2022] by bilinear interpolation using the R `terra` package [@Hijmans2024].
+It would be straightforward to derive vertex elevations from a more detailed DEM if required.
 
-How terrain is handled in graph edge cost estimation (i.e., assigning half the cost from the terrain at the vertex at each end of the edge).
+Edge weights (i.e. estimated traversal costs) are assigned by calculating the slope of each directed edge, the estimated hiking speed for that slope, and thus finding how long it should take for an edge to be traversed.
+If the estimated traversal time of an edge in the nominal 100 metre lattice is greater than 30 minutes then it is removed from the graph, along with its 'twin' edge in the opposite direction.
+Removing edges in both directions is partly a practical matter as it simplifies the operation of many graph algorithms, but can also be justified on the basis that a slope steep enough to be a barrier to ascent is unlikely to be traversed when descending.
 
-`igraph` implements betweenness centrality measures [@Freeman1978; @Brandes2001], which we used to identify vertices and/or edges most likely to be traversed by minimum travel time routes across the terrain.
+After removal of all such edges only the largest connected graph component is retained so that the resulting hiking network representation is fully connected with no isolated vertices unreachable from elsewhere in the network remaining.
+A map of the fifth largest study area's hiking network is shown in @fig-hiking-network-example.
+This network includes 30,697 vertices and 174,798 directed edges. 
+The largest of the five study sites (see @fig-five-subregions) results in a network containing almost a quarter of a million vertices and over 1.4 million directed edges.
+A hiking network can be used to explore many connectivity properties of the environment.
+For example, for a chosen origin point, a _shortest path tree_ can be derived showing the route (@fig-shortest-path-tree). 
 
-### Betweenness centrality limited by radius.
+```{r}
+#| output: false
+#| label: create-lattice-points
+contiguous_geology <- "05"  # small one for testing
+extent_file        <- str_glue("{base_folder}/contiguous-geologies/{basename}-extent-{contiguous_geology}.gpkg")
+extent             <- st_read(extent_file)
+
+terrain <- rast(dem_file) |>
+  crop(extent |> as("SpatVector")) |>
+  mask(extent |> as("SpatVector"))
+# and for visualization
+shade <- get_hillshade(terrain) |>
+  as.data.frame(xy = TRUE) # this is for plotting in ggplot
+
+# calculate hexagon spacing of equivalent area
+hex_cell_spacing <- resolution * sqrt(2 / sqrt(3))
+
+xy  <- extent |>
+  st_make_grid(cellsize = hex_cell_spacing, what = "centers", square = FALSE) |>
+  st_as_sf() |>
+  rename(geometry = x) |>   # shouldsee https://github.com/r-spatial/sf/issues/2429
+  st_set_crs(st_crs(extent))
+coords <- xy |> st_coordinates()
+
+xy <- xy |>
+  mutate(x = coords[, 1], y = coords[, 2])
+
+z <- terrain |> 
+  terra::extract(xy |> as("SpatVector"), method = "bilinear")
+
+pts <- xy |>
+  mutate(z = z[, 2])
+
+# remove any NAs that might result from interpolation or impassable terrain
+# NAs tend to occur around the edge of study area
+cover <- geology |>
+  dplyr::select(POLYGTYPE) |> 
+  rename(terrain = POLYGTYPE)
+
+pts <- pts |>
+  st_join(cover) |>
+  filter(!is.na(z), terrain != impassable_geology)
+```
+
+```{r}
+G <- graph_from_points(pts, hex_cell_spacing * 1.1)
+G <- assign_movement_variables_to_graph_2(G, xyz = pts, terrain = pts$terrain)
+V(G)$id <- 1:length(G)
+
+# now simplify by removing all edges that have est. costs > 30 min for 100m res edges
+# scaled appropriately i.e. if resolution is coarser then that cutoff should be longer
+# and extracting the strong largest component (connected both directions)
+cost_cutoff <- 0.5 * resolution / 100
+G <- delete_edges(G, E(G)[which(E(G)$cost > cost_cutoff)]) |>
+  largest_component(mode = "strong")
+
+remaining_nodes <- V(G)$id
+pts <- pts |> slice(remaining_nodes)
+```
+
+::: {#fig-hiking-network-example layout="[[50,-1,50], [50,-1,50]]"}
+
+```{r}
+#| label: fig-map-of-hiking-network
+#| fig-cap: "Map of a hiking network coloured by estimated traversal times of edges" 
+bb <- (extent |> st_bbox() |> as.vector()) + c(1.05e4, 1.25e4, -1.45e4, -1.35e4)
+ggplot() +
+  geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  geom_sf(data = G |> get_graph_as_line_layer(append_attributes = TRUE),
+          aes(colour = cost), linewidth = 0.05) +
+  scale_colour_viridis_c(option = "A", direction = -1, name = "Cost, hours") +
+  coord_sf() +
+  guides(fill = "none") +
+  annotate("rect", xmin = bb[1], ymin = bb[2], xmax = bb[3], ymax = bb[4], 
+           fill = NA, colour = "red", linewidth = 0.35) +
+  annotation_scale(plot_unit = "m", height = unit(0.1, "cm")) +
+  theme_void()
+```
+
+```{r}
+#| label: fig-zoomed-in-map-of-hiking-network
+#| fig-cap: "Red-outlined area zoomed in revealing edges removed from graph due to steep slopes" 
+ggplot() +
+  geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  geom_sf(data = G |> get_graph_as_line_layer(append_attributes = TRUE),
+          aes(colour = cost), linewidth = 0.2) +
+  scale_colour_viridis_c(option = "A", direction = -1, name = "Cost, hours") +
+  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)], expand = FALSE) +
+  guides(fill = "none", colour = "none") +
+  theme_void()
+```
+
+```{r}
+#| label: fig-shortest-path-tree
+#| fig-cap: "Shortest path tree of a hiking network from the indicated origin" 
+centroid <- extent |>
+  st_centroid() |> 
+  st_nearest_feature(pts)
+
+spt <- G |> get_shortest_path_tree(vid = centroid) |>
+  get_graph_as_line_layer()
+
+bb <- (extent |> st_bbox() |> as.vector()) +  + c(1.35e4, 0.8e4, -0.9e4, -1.55e4)
+ggplot() +
+  geom_sf(data = extent, colour = NA) +
+  geom_sf(data = spt, colour = "black", linewidth = 0.05) +
+  geom_sf(data = pts |> slice(centroid)) +
+  coord_sf() +
+  guides(fill = "none", colour = "none") +
+  annotate("rect", xmin = bb[1], ymin = bb[2], xmax = bb[3], ymax = bb[4], 
+           fill = NA, colour = "red", linewidth = 0.35) +
+  theme_void()
+```
+
+```{r}
+#| label: fig-zoomed-in-shortest-path-tree
+#| fig-cap: "Red-outlined area zoomed in view of the shortest path tree" 
+ggplot() +
+  geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  geom_sf(data = spt, colour = "black", linewidth = 0.2) +
+  geom_sf(data = pts |> slice(centroid)) +
+  coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)], expand = FALSE) +
+  guides(fill = "none", colour = "none") +
+  theme_void()
+```
+
+A hiking network derived for the fifth largest study site shown in @fig-five-subregions.
+
+:::
+
+### Betweenness centrality limited by radius
+A particular graph connectivity property we have used to reveal the relative likelihood of different parts of a terrain being frequently traversed is _betweenness centrality_.
+In a graph $G=(V,E)$ a path $P$ is an ordered sequence of vertices:
+$$
+P=\left(v_1,v_2,\ldots,v_n\right)
+$$ {$eq-path}
+such that each consecutive pair of vertices $v_i$ and $v_{i+1}$ is adjacent, i.e. connected by a directed edge $e_{i,j}$.
+The simple length of a path is the number of edges it contains.
+The weighted length of a patch is the sum over its edges of a _weight_ or _cost_ associated with each edge, which we denote $w_{i,j}$, that is the length $L$ of a path $P$ is given by
+$$
+L(P)=\sum_{i=1}^{n-1} w_{i,i+1}
+$$ {#eq-path-length}
+The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldots,v_j\right)$ such that $L(P)$ is minimised.
+In a regular lattice such as our hiking networks there are many equal length shortest paths between any pair of vertices.
+When we consider edge weights, then the shortest path will be unique, or one of only a small number of possibilities of equal length.
+
+Shortest paths are used to develop many measures of graph centrality [@Freeman1978].
+For example, the mean shortest path length of a vertex is the mean of all the shortest path lengths from that vertex to every other vertex in the graph.
+A vertex with low mean shortest path length might be considered more central than another a vertex with a higher mean shortest path length.
+
+One measure of vertex centrality in a graph is _betweenness centrality_. 
+The betweenness centrality of a vertex is the total number of times a vertex is on shortest paths between every other pair of vertices in the network.
+When the number of shortest paths or _geodesics_ between two vertices $v_j$ and $v_k$ is $g_{jk}$, each appearance on those shortest paths of a vertex only contributes $1/g_{jk}$ to that vertex's betweenness centrality.
+Formally, if we denote the number of times $v_i$ appears on shortest paths between $v_j$ and $v_k$ by $g_{jk}(v_i)$, then we can write this as
+$$
+\mathrm{betweenness}(v_i)=\sum_{k=1}^n\sum_{j=1}^n\frac{g_{jk}(v_i)}{g_{jk}}\forall i\neq j\neq k
+$$ {#eq-vertex-betweenness}
+Betweenness centrality is particularly relevant to applications where we are interested in graph vertices that control movement through the graph.
+An edge betweenness centrality measure can also be calculated on similar principles, but is not considered further here.
+
+As might be expected betweenness centralities are computationally demanding to calculate.
+The time complexity of early algorithms was $\mathcal{O}(n^3)$ where $n$ is the number of vertices in the graph [@Brandes2001].
+An implementation of Brandes's algorithm [-@Brandes2001] which has time complexity $\mathcal{O}(nm + n^2\log n)$ where $m$ is the number of edges in the graph, is provided in the `igraph` package [@Csardi2024].
+Even with this improvement in performance, in our application such computational complexity is a strong motivation for working at a nominal 100 metre resolution.
+Halving the resolution to 50 metres would increase the number of graph vertices four-fold, and lead to a substantial increases in the times taken to calculate betweenness centralities.
+
+
+
+Fortunately, the `igraph` implementation of betweennees centrality provides an option to _radius-limit_ between calculations, meaning that only paths shorter than a specified radius are considered in the counting of appearances on shortest paths.
+While 'all graph' betweeness centralities can be standardised relative to a theoretical maximum of $(n-1)(n-2)$, not straightforward standardisation is possible for the radius-limited case.
+Since we are primarily interested in betweenness centrality as a measure of the _relative_ vulnerability of different locations to human impacts, we linearly rescale measured betweennees measures with respect to the results of a given analysis for visualisation purposes.
+
+
 
 ### Impact minimizing networks
 
