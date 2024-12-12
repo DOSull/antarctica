@@ -15,6 +15,8 @@ author:
 bibliography: antarctica.bib
 csl: the-canadian-geographer.csl
 lightbox: true
+navbar: false
+sidebar: false
 format: 
   html:
     toc: true
@@ -51,15 +53,21 @@ library(ggplot2)
 library(ggpubr)
 library(grid)
 library(cols4all)
-library(tidyr)
-library(dplyr)
-library(igraph)
-library(sf)
-library(terra)
-library(akima)
-library(stringr)
 library(ggnewscale)
 library(ggspatial)
+
+library(tidyr)
+library(dplyr)
+library(purrr)
+library(stringr)
+
+library(igraph)
+
+library(sf)
+library(terra)
+library(spatstat)
+library(akima)
+
 library(minpack.lm)
 
 home <- "/Users/david/Documents/work/mwlr-tpm-antarctica/antarctica"
@@ -794,58 +802,244 @@ A hiking network derived for the fifth largest study site shown in @fig-five-sub
 
 :::
 
-### Betweenness centrality limited by radius
-A particular graph connectivity property we have used to reveal the relative likelihood of different parts of a terrain being frequently traversed is _betweenness centrality_.
-In a graph $G=(V,E)$ a path $P$ is an ordered sequence of vertices:
-$$
-P=\left(v_1,v_2,\ldots,v_n\right)
-$$ {$eq-path}
-such that each consecutive pair of vertices $v_i$ and $v_{i+1}$ is adjacent, i.e. connected by a directed edge $e_{i,j}$.
-The simple length of a path is the number of edges it contains.
-The weighted length of a patch is the sum over its edges of a _weight_ or _cost_ associated with each edge, which we denote $w_{i,j}$, that is the length $L$ of a path $P$ is given by
+### Betweenness centrality
+The connectivity properties of a hiking graph can be described using a range of measures of graph structure and used to reveal the relative likelihood of different parts of a terrain being frequently traversed.
+The particular structural measure we focus on is _betweenness centrality_, which is explained below.
+
+In a graph $G=(V,E)$ a path $P$ is an ordered sequence of vertices, $P=\left(v_1,v_2,\ldots,v_n\right)$ such that each consecutive pair of vertices $v_i$ and $v_{i+1}$ is adjacent, i.e. connected by a directed edge $e_{i,j}$.
+The _length_ of a path is the number of edges it contains.
+The _weighted length_ or _cost_ of a path is the sum over its edges of a _weight_ or _cost_ associated with each edge, which we here denote $w_{i,j}$, i.e., the length $L$ of a path $P$ is given by
 $$
 L(P)=\sum_{i=1}^{n-1} w_{i,i+1}
 $$ {#eq-path-length}
-The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldots,v_j\right)$ such that $L(P)$ is minimised.
-In a regular lattice such as our hiking networks there are many equal length shortest paths between any pair of vertices.
-When we consider edge weights, then the shortest path will be unique, or one of only a small number of possibilities of equal length.
 
-Shortest paths are used to develop many measures of graph centrality [@Freeman1978].
-For example, the mean shortest path length of a vertex is the mean of all the shortest path lengths from that vertex to every other vertex in the graph.
-A vertex with low mean shortest path length might be considered more central than another a vertex with a higher mean shortest path length.
+The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldots,v_j\right)$ starting at$v_i$ and ending at $v_i$ passing through intervening vertices $\left(v_*\right)$ such that $L(P)$ is minimised.
+In a regular lattice such as our hiking networks there are many shortest paths of equal length if the weight associated with each edge is equal, as it would be if we based it solely on the length of the edge between each pair of vertices.
+When we consider edge traversal costs derived from the slope of each edge and a hiking function, then the shortest path will be unique, or one of only a small number of possibilities of equal total cost.
 
-One measure of vertex centrality in a graph is _betweenness centrality_. 
-The betweenness centrality of a vertex is the total number of times a vertex is on shortest paths between every other pair of vertices in the network.
-When the number of shortest paths or _geodesics_ between two vertices $v_j$ and $v_k$ is $g_{jk}$, each appearance on those shortest paths of a vertex only contributes $1/g_{jk}$ to that vertex's betweenness centrality.
-Formally, if we denote the number of times $v_i$ appears on shortest paths between $v_j$ and $v_k$ by $g_{jk}(v_i)$, then we can write this as
+Shortest paths are used to develop many measures of vertext centrality in graphs [@Freeman1978].
+One such measure of vertex centrality is _betweenness centrality_. 
+The betweenness centrality of a vertex is the total number of times that vertex is on shortest paths between every other pair of vertices in the network.
+If we denote the number of shortest paths or _geodesics_ between two vertices $v_j$ and $v_k$ by $g_{jk}$, then each appearance of a vertex $v_i$ on the shortest path between those vertices only contributes $1/g_{jk}$ to the betweenness centrality of $v_i$.
+Formally, if we denote the number of times vertex $v_i$ appears on shortest paths between $v_j$ and $v_k$ by $g_{jk}(v_i)$, then its betweenness $b_i$ is given by
 $$
-\mathrm{betweenness}(v_i)=\sum_{k=1}^n\sum_{j=1}^n\frac{g_{jk}(v_i)}{g_{jk}}\forall i\neq j\neq k
+b_i=\sum_{k=1}^n\sum_{j=1}^n\frac{g_{jk}(v_i)}{g_{jk}}\forall i\neq j\neq k
 $$ {#eq-vertex-betweenness}
-Betweenness centrality is particularly relevant to applications where we are interested in graph vertices that control movement through the graph.
-An edge betweenness centrality measure can also be calculated on similar principles, but is not considered further here.
+Betweenness centrality is particularly relevant to applications where we are interested in how important vertices are to movement across the graph.
+An edge betweenness centrality measure can also be calculated on similar principles, but is not considered further here, in part because visualization is challenging given the potential for different scores for the two directed edges between each pair of vertices.
+Vertex betweenness on the other hand yields a single value for each vertex.
 
 As might be expected betweenness centralities are computationally demanding to calculate.
-The time complexity of early algorithms was $\mathcal{O}(n^3)$ where $n$ is the number of vertices in the graph [@Brandes2001].
-An implementation of Brandes's algorithm [-@Brandes2001] which has time complexity $\mathcal{O}(nm + n^2\log n)$ where $m$ is the number of edges in the graph, is provided in the `igraph` package [@Csardi2024].
+The time complexity of early algorithms was $\mathcal{O}(n^3)$, where $n$ is the number of vertices in the graph [@Brandes2001].
+An implementation of Brandes's algorithm [-@Brandes2001] with time complexity $\mathcal{O}(nm + n^2\log n)$, where $m$ is the number of edges in the graph, is provided in the `igraph` package [@Csardi2024].
 Even with this improvement in performance, in our application such computational complexity is a strong motivation for working at a nominal 100 metre resolution.
 Halving the resolution to 50 metres would increase the number of graph vertices four-fold, and lead to a substantial increases in the times taken to calculate betweenness centralities.
 
+Results of betweenness centrality for our example hiking network are shown in @fig-betweenness-map.
+'All-paths' betweenness centralities can be standardised relative to a theoretical maximum of $(n-1)(n-2)$, no straightforward standardisation is possible for the radius-limited case.
+Since we are primarily interested in betweenness as a measure of the _relative_ vulnerability of different locations to human impacts, we linearly rescaled betweenness scores in all cases with respect to the range of scores across the graph being analysed.
+The rescaled betweenness, $b_i^\prime$ for vertex $v_i$ is given by
+$$
+b_i^\prime=\frac{b_i-b_{\min}}{b_{\max}-b_{\min}}
+$$ {#eq-betweenness-rescaling}
+This approach is also applicable to radius-limited betweenness scores (see @sec-radius-limited-betweenness).
 
+When all-paths betweenness is calculated, bottlenecks between large sub-areas are strongly highlighted as is the case for the 'inner bend' of the relatively narrow neck of navigable terrain that connects the east and west sub-areas of this site.
+The other feature of this map is the identification of a distinctive structure of 'arterial' routes.
 
-Fortunately, the `igraph` implementation of betweennees centrality provides an option to _radius-limit_ between calculations, meaning that only paths shorter than a specified radius are considered in the counting of appearances on shortest paths.
-While 'all graph' betweeness centralities can be standardised relative to a theoretical maximum of $(n-1)(n-2)$, not straightforward standardisation is possible for the radius-limited case.
-Since we are primarily interested in betweenness centrality as a measure of the _relative_ vulnerability of different locations to human impacts, we linearly rescale measured betweennees measures with respect to the results of a given analysis for visualisation purposes.
+```{r}
+if (!"betweenness" %in% vertex_attr_names(G)) {
+  V(G)$betweenness <- betweenness(G, weights = E(G)$cost, cutoff = -1) |>
+    scales::rescale(to = c(0, 100))
+}
+```
 
+```{r}
+#| label: fig-betweenness-map
+#| fig-cap: "Relative vertex betweenness of vertices in the graph from @fig-hiking-network-example."
+G_sf <- G |> get_graph_as_point_layer() |>
+  st_buffer(hex_cell_spacing / 2, nQuadSegs = 2)
+ggplot(G_sf) +
+  geom_sf(aes(fill = betweenness), colour = "NA") +
+  scale_fill_viridis_c(option = "A", direction = -1, name = "Relative\nbetweenness") +
+  theme_void()
+```
 
+### Betweenness centrality limited by radius {#sec-radius-limited-betweenness}
+The `igraph` implementation of betweenness centrality provides an option to _radius limit_ betweenness calculations, meaning that only paths shorter than a specified radius (expressed in cost units, here of time) are considered in counting the appearance of vertices on shortest paths.
+This approach is particularly useful for large graphs where the time complexity of calculating radius limited betweenness scales more favourably than cited above, because the number of shortest paths that must be identified is greatly reduced.
+We informally confirmed the intuition that for a given radius limit the time take to compute betweenness scales approximately linearly with the number of vertices in the graph, since the number of shortest paths local to each vertex, and on which it might be found is similar.
+
+Results for a series of radius limits are shown in @fig-radius-limited-betweenness.
+The results here are interesting.
+At very short radii (the 30 minutes case) many locally important paths are identified as potentially relatively heavily trafficked.
+As the radius increases the pattern emphasises potential paths that are important across wider areas, eventually tending toward the arterial structure of the all-paths case.
+We discuss these results more fully in @sec-discussion.
+
+```{r}
+radii <- c(0.5, 1, 1.5, 2, 3, 5)
+betweenness_results <- list()
+for (i in seq_along(radii)) {
+  r <- radii[i]
+  b_r <- betweenness(G, weights = E(G)$cost, cutoff = r) |>
+    scales::rescale(to = c(0, 100))
+  betweenness_results[[i]] <- G_sf |>
+    mutate(radius = str_glue("{r*60} mins"), betweenness = b_r)
+}
+```
+
+```{r}
+#| label: fig-radius-limited-betweenness
+#| fig-cap: "Vertex betweenness maps based on different radius limits. As in @fig-betweenness-map the visualization colouring is based on linear scaling of raw betweenness scores."
+betweenness_results_df <- betweenness_results |>
+  bind_rows() |>
+  mutate(radius = factor(radius, levels = str_glue("{radii * 60} mins")
+))
+
+ggplot(betweenness_results_df) +
+  geom_sf(aes(fill = betweenness), colour = "NA") +
+  scale_fill_viridis_c(option = "A", direction = -1) +
+  guides(fill = "none") +
+  facet_wrap( ~ radius, ncol = 3) +
+  theme_void()
+```
 
 ### Impact minimizing networks
+In this section we explore developing the betweenness centrality for a limited set of locations, which might represent a base camp, rest sites, and experimental sites for a season's expedition.
 
-Tentative proposal for impact minimizing networks based on minimum spanning trees, but noting the issue with respect to directed graphs when these would more correctly be arborescences [@Korte2018a].
+This is relatively straightforward and like radius limited betweenness involves limiting the shortest paths considered to only those among a chosen subset of vertices in the graph.
+One slight simplification we make for performance reasons is to weight every appearance of a vertex on a geodesic as equal, even if multiple equal length shortest paths exist between two vertices. 
+In practice, this is unlikely to have much effect on the resulting estimates of relative betweenness, since with real-valued edge costs two paths of exactly equal cost are unlikely.
+An example result is shown in @fig-betweenness-limited-sites.
+One refinement shown in the figure is that sites have been waited by relative importance so that a site such as an expedition base camp can be expected to originate more trips than other sites.
+ 
+```{r}
+# make a random set of locations with guaranteed minimum separation
+origin_pts <- rSSI(2000, n = 20, win = as.owin(extent)) |> 
+  st_as_sf() |> 
+  st_set_crs(st_crs(extent)) |> 
+  slice(-1) |> 
+  dplyr::select(-label)
 
-## Discussion
+# get the sequence numbers of thes in the pts data
+origin_is <- origin_pts |>
+  st_nearest_feature(pts)
 
-Blah
+# make up a point dataset of these origins with randomly assigned importance
+origin_vs <- pts |>
+  mutate(id = row_number()) |>
+  slice(origin_is) |>
+  mutate(Importance = sample((seq(2, 50, 2) / 5) ^ 2, n(), 
+                             replace = TRUE, prob = (seq(50, 2, -2) / 5) ^ 2))
 
-## Conclusions
+# put all vertices on a shortest path to begin
+vs_on_shortest_paths <- V(G) |> 
+  as.vector()
 
-Blah
+# make a data frame we can join the results into
+for (i in seq_along(origin_vs$id)) {
+  # one entry for each appearance on a shortest path
+  SP <- shortest_paths(G, origin_vs$id[i], origin_vs$id[-i], weights = edge_attr(G, "cost"))
+  new_shortest_paths <- SP$vpath |>
+    lapply(as.vector) |>
+    reduce(c) |>
+    rep(origin_vs$Importance[i])
+  vs_on_shortest_paths <- vs_on_shortest_paths |>
+    c(new_shortest_paths)
+}
+shortest_path_counts <- vs_on_shortest_paths |>
+  table() |>
+  as.vector()
+
+Gsp <- set_vertex_attr(G, "sp_betweenness", value = shortest_path_counts - 1)
+G_sf_od <- G |>
+  set_vertex_attr("sp_betweenness", value = shortest_path_counts - 1) |>
+  get_graph_as_point_layer() |>
+  st_buffer(hex_cell_spacing / 2, nQuadSegs = 2) |>
+  filter(sp_betweenness > 0)
+```
+
+```{r}
+#| label: fig-betweenness-limited-sites
+#| fig-cap: The network of shortest paths among a weighted set of expedition sites.
+ggplot() +
+  geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  guides(fill = "none") +
+  new_scale_fill() +
+  geom_sf(data = G_sf_od, aes(fill = sp_betweenness), colour = NA) +
+  scale_fill_viridis_c(option = "A", direction = -1) +
+  geom_sf(data = origin_vs, aes(size = Importance), colour = "black", pch = 1) +
+  guides(fill = "none") +
+  theme_void()
+```
+
+A further analytical possibility is to use the hiking network to develop a set of routes among the sites that might minimise total impact, by confining movement to a limited set of paths.
+This approach is consistent with work in ecology and park and wildlife management which suggests that path networks can reduce the impact of human movement in many environments [@Cole1995a;@Cole1995;@Kidd2015;@Marion2016;@Piscova2023;@Tomczyk2023].
+
+The approach taken is first to first determine the lengths of all the shortest paths among all the sites.
+Then a _minimum spanning tree_ for the sites is calculated, which is a graph with minimum total edge length that connects all the sites [@Prim1957].
+One refinement here, which we do not account for is that algorithms for finding the minimum spanning tree of a directed graph (referred to a _minimum-cost arborescence_ or _optimal branching_) are more complex [@Korte2018a], and not at present supported in `igraph`.
+While there is some asymmetry in paths between locations depending on the direction of travel, it is not extreme, and so we approximate a solution by finding the minimum spanning tree links (i.e. direct connections) among sites treating our network as undirected, and then determine paths over the ground to make the connections between sites based on the directed hiking network.
+The resulting path network for the same set of sites is shown in @fig-approx-minimum-arborescence.
+
+```{r}
+dist_m <- distances(G, origin_vs$id, origin_vs$id, weights = edge_attr(G, "cost"))
+xs <- vertex_attr(G, "x", V(G)[origin_vs$id])
+ys <- vertex_attr(G, "y", V(G)[origin_vs$id])
+approx_min_arborescence <- dist_m |> 
+  graph_from_adjacency_matrix(mode = "directed", weighted = TRUE) |>
+  set_vertex_attr("x", value = xs) |>
+  set_vertex_attr("y", value = ys) |>
+  mst() # this applies algorithms appropriate to an undirected graph
+```
+
+```{r}
+dir_m <- approx_min_arborescence |> as_adjacency_matrix(sparse = FALSE)
+undir_m <- ((dir_m + t(dir_m)) > 0)
+which_ijs <- which(undir_m, arr.ind = TRUE)
+
+# put all vertices on a shortest path to begin
+vs_on_shortest_paths <- V(G) |> 
+  as.vector()
+
+# make a data frame we can join the results into
+for (k in 1:nrow(which_ijs)) {
+  i <- which_ijs[k, 1]
+  j <- which_ijs[k, 2]
+  # one entry for each appearance on a shortest path
+  SP <- shortest_paths(G, origin_vs$id[i], origin_vs$id[j], weights = edge_attr(G, "cost"))
+  new_shortest_paths <- SP$vpath[[1]] |>
+    as.vector() |>
+    rep(origin_vs$Importance[i])
+  vs_on_shortest_paths <- vs_on_shortest_paths |>
+    c(new_shortest_paths)
+}
+shortest_path_counts <- vs_on_shortest_paths |>
+  table() |>
+  as.vector()
+
+G_sf_min <- G |>
+  set_vertex_attr("sp_betweenness", value = shortest_path_counts - 1) |>
+  get_graph_as_point_layer() |>
+  st_buffer(hex_cell_spacing / 2, nQuadSegs = 2) |>
+  filter(sp_betweenness > 0)
+```
+
+```{r}
+#| label: fig-approx-minimum-arborescence
+#| fig-cap: "A potential impact minimising route network among sites."
+ggplot() +
+  geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
+  scale_fill_distiller(palette = "Greys", direction = 1) +
+  guides(fill = "none") +
+  new_scale_fill() +
+  geom_sf(data = G_sf_min, aes(fill = sp_betweenness), colour = NA) +
+  scale_fill_viridis_c(option = "A", direction = -1) +
+  geom_sf(data = origin_vs, aes(size = Importance), colour = "black", pch = 1) +
+  guides(fill = "none", size = "none") +
+  theme_void()
+```
+
+## Discussion and conclusions {#sec-discussion}
+
