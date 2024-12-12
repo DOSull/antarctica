@@ -1044,10 +1044,12 @@ ggplot() +
 
 ## Discussion {#sec-discussion}
 To cover:
+
 + Figure of the largest study site?
 + Limitations of the method:
   + Data concerns, esp. opportunistic nature of the GPS data
   + Would higher resolution network be useful?
+  + Possible limitations of a regularly spaced lattice: extend to a lattice based on e.g., TIN?
   + Reliance of shortest paths as a guide to behaviour
   + Some minor issues regarding the difference between directed and undirected graphs
 + Relevance of radius limits on betweenness: the implicit model of movement in this approach (short horizons, no existing paths, 'keep going for half an hour in this general direction...')
@@ -1055,6 +1057,7 @@ To cover:
 
 ## Conclusions {#sec-conclusions}
 To cover:
+
 + Novelty of fitting land cover specific hiking functions
 + A method for exploring potential impacts in a novel environment
 + A method for proposing less damaging plans for expeditions
