@@ -922,6 +922,7 @@ origin_pts <- rSSI(2000, n = 20, win = as.owin(extent)) |>
   dplyr::select(-label)
 
 # get the sequence numbers of thes in the pts data
+
 origin_is <- origin_pts |>
   st_nearest_feature(pts)
 
@@ -929,8 +930,8 @@ origin_is <- origin_pts |>
 origin_vs <- pts |>
   mutate(id = row_number()) |>
   slice(origin_is) |>
-  mutate(Importance = sample((seq(2, 50, 2) / 5) ^ 2, n(), 
-                             replace = TRUE, prob = (seq(50, 2, -2) / 5) ^ 2))
+  # note: important here to avoid Importance values < 1!
+  mutate(Importance = rgeom(n(), 0.1) + 1)
 
 # put all vertices on a shortest path to begin
 vs_on_shortest_paths <- V(G) |> 
@@ -1041,5 +1042,20 @@ ggplot() +
   theme_void()
 ```
 
-## Discussion and conclusions {#sec-discussion}
+## Discussion {#sec-discussion}
+To cover:
++ Figure of the largest study site?
++ Limitations of the method:
+  + Data concerns, esp. opportunistic nature of the GPS data
+  + Would higher resolution network be useful?
+  + Reliance of shortest paths as a guide to behaviour
+  + Some minor issues regarding the difference between directed and undirected graphs
++ Relevance of radius limits on betweenness: the implicit model of movement in this approach (short horizons, no existing paths, 'keep going for half an hour in this general direction...')
++ Question of embedding paths, i.e., locking in more damage to some parts of the landscape vs others
 
+## Conclusions {#sec-conclusions}
+To cover:
++ Novelty of fitting land cover specific hiking functions
++ A method for exploring potential impacts in a novel environment
++ A method for proposing less damaging plans for expeditions
++ Other?
