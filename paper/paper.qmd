@@ -198,7 +198,7 @@ Nevertheless, these parameter values are widely applied in the literature.
 All these hiking functional forms are somewhat *ad hoc*. 
 They exhibit desirable, expected properties: a peak speed at a slope near zero, which we expect to be slightly negative (i.e., downhill), and continuously falling speeds as the slope deviates from the slope of peak speed. 
 However, there is no theoretical basis for the specific functional forms listed in @tbl-hiking-function-equations. 
-More principled approaches might be developed based on the literature on the physiology of human movement, see e.g. **CITATIONS NEEDED HERE**. 
+More principled approaches might be developed based on the literature on the physiology of human movement [see, e.g., @Minetti2002]. 
 In general, approaches based on minimising energy use yield similar results to empirical speed-slope functions, although it is worth noting that they more reliably generate zig-zag or 'switchback' movement behaviour on steep slopes [@Llobera2007]. 
 However, these are hard to implement, and we have adopted empirically-derived and locally-specific hiking functions following @Marquez-Perez2017, @Irmischer2018, and @Campbell2019. 
 This choice is based on available data and the goals of our study, where the relative cost of different potential routes in the landscape is more important than exact prediction of routes. 
