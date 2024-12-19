@@ -103,10 +103,11 @@ source(str_glue("{home}/paper/raster-to-graph-functions-paper.R"))
 
 We use GPS data collected on a science expedition in Antarctica to estimate hiking functions for the speed at which humans traverse terrain differentiated by slope and by ground cover (moraines and rock). 
 We use the estimated hiking functions to build weighted directed graphs as a representation of specific environments in Antarctica. 
-From these we estimate using a variety of graph metrics—particularly betweennness centrality—the relative potential for human environmental impacts arising from scientific activities in those environments. 
+From these we estimate using a variety of graph metrics—particularly betweenness centrality—the relative potential for human environmental impacts arising from scientific activities in those environments. 
 We also suggest a simple approach to planning science expeditions that might allow for reduced impacts in these environments.
 
 ## Introduction
+**FRASER TO FRAME / CLARIFY MOTIVATION**
 
 Overview of Antarctic science: when and where, its intensity etc. Background on international treaties, etc.
 
@@ -217,7 +218,7 @@ Details of this approach are reported and discussed in @sec-hiking-function-esti
 A has been noted, hiking functions are usually asymmetric, with the highest attainable speed at a slight downhill slope. 
 This asymmetry means that unless analysis is focused on assessing movement cost from a single origin or to a single destination, it is necessary to represent the landscape in a way that can accommodate asymmetry. 
 We therefore represent the landscape as a directed graph $G(V,E)$ of vertices and directed edges connecting them.
-In this representaiton, graph vertices $v_i$ are locations with associated elevation and land cover. 
+In this representation, graph vertices $v_i$ are locations with associated elevation and land cover. 
 Vertices minimally have spatial coordinates $(x_i,y_i)$, an elevation $z_i$, and a land cover, $C_i$:
 
 $$
@@ -231,7 +232,7 @@ $$
 \theta_{ij}=\frac{z_j-z_i}{\sqrt{(x_i-x_j)^2+(y_i-y_j)^2}}
 $$ {#eq-slope-of-edge}
 
-The obvious way to derive such a graph from spatial data is to assign each cell in a raster digital elevation model (DEM) to a graph vertex, so that graph vertices are arranged in a regular square grid or lattice, and this approach has been widely adopted. **CITATIONS NEEDED HERE** 
+The obvious way to derive such a graph from spatial data is to assign each cell in a raster digital elevation model (DEM) to a graph∏ vertex, so that graph vertices are arranged in a regular square grid or lattice, and this approach has been widely adopted. **CITATIONS NEEDED HERE** 
 However, this still requires a decision about how to define graph edges, which can be thought of in terms of _allowed moves_ between vertices. 
 Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's moves&mdash;are shown in @fig-lattice-adjacencies. 
 Another option shown in the figure is to lay out a regular hexagonal grid of vertex locations and link each vertex to its six nearest neighbours.
@@ -616,7 +617,7 @@ pred3 <- predictNLS(m3, newdata = slopes, level = conf) |>
 predictions <- bind_rows(pred1, pred2, pred3)
 ```
 
-Overplotting of the hiking functions including an additional model fitted to all the data, confirms that the fitted functions are sufficiently different to retain separate models for each ground cover (see @fig-models-by-cover-compared).
+Plotting both hiking functions along with an additional model fitted to all the data on the same axes confirms that the fitted functions are sufficiently different to retain separate models for each ground cover (see @fig-models-by-cover-compared).
 Plotting both functions in the same graph makes clearer the difference in maximum speed and slope at maximum speed associated with each ground cover.
 
 ```{r}
@@ -636,7 +637,7 @@ ggplot() +
   theme_minimal()
 ```
 
-The estimatedhiking functions associated with the two landcovers are
+The estimated hiking functions associated with the two land covers are
 $$
 \begin{array}{rcl}
 v_{\mathrm{moraine}} & = & 4.17\,\exp\left[{-\frac{(\theta+0.0526)^2}{0.236}}\right] \\
@@ -648,7 +649,7 @@ where the different maximum speeds (in kilometres per hour) and slopes of maximu
 
 ### Landscapes as graphs
 We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
-Graphs are manipulated as igraph package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
+Graphs are manipulated as `igraph` package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
 An important decision in constructing graphs is choice of the spacing of the hexagonal lattice, and also of the underlying DEM from which graph vertex elevations are derived.
 Given the extent of the study sites (see @fig-five-subregions) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
 The hexagon centre to centre spacing of this lattice is given by 
@@ -817,7 +818,7 @@ The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldot
 In a regular lattice such as our hiking networks there are many shortest paths of equal length if the weight associated with each edge is equal, as it would be if we based it solely on the length of the edge between each pair of vertices.
 When we consider edge traversal costs derived from the slope of each edge and a hiking function, then the shortest path will be unique, or one of only a small number of possibilities of equal total cost.
 
-Shortest paths are used to develop many measures of vertext centrality in graphs [@Freeman1978].
+Shortest paths are used to develop many measures of vertex centrality in graphs [@Freeman1978].
 One such measure of vertex centrality is _betweenness centrality_. 
 The betweenness centrality of a vertex is the total number of times that vertex is on shortest paths between every other pair of vertices in the network.
 If we denote the number of shortest paths or _geodesics_ between two vertices $v_j$ and $v_k$ by $g_{jk}$, then each appearance of a vertex $v_i$ on the shortest path between those vertices only contributes $1/g_{jk}$ to the betweenness centrality of $v_i$.
@@ -873,7 +874,7 @@ We informally confirmed the intuition that for a given radius limit the time tak
 Results for a series of radius limits are shown in @fig-radius-limited-betweenness.
 The results here are interesting.
 At very short radii (the 30 minutes case) many locally important paths are identified as potentially relatively heavily trafficked.
-As the radius increases the pattern emphasises potential paths that are important across wider areas, eventually tending toward the arterial structure of the all-paths case.
+As the radius increases the pattern emphasizes potential paths that are important across wider areas, eventually tending toward the arterial structure of the all-paths case.
 We discuss these results more fully in @sec-discussion.
 
 ```{r}
@@ -915,6 +916,8 @@ One refinement shown in the figure is that sites have been waited by relative im
  
 ```{r}
 # make a random set of locations with guaranteed minimum separation
+set.seed(1)
+
 origin_pts <- rSSI(2000, n = 20, win = as.owin(extent)) |> 
   st_as_sf() |> 
   st_set_crs(st_crs(extent)) |> 
@@ -980,9 +983,9 @@ This approach is consistent with work in ecology and park and wildlife managemen
 
 The approach taken is first to first determine the lengths of all the shortest paths among all the sites.
 Then a _minimum spanning tree_ for the sites is calculated, which is a graph with minimum total edge length that connects all the sites [@Prim1957].
-One refinement here, which we do not account for is that algorithms for finding the minimum spanning tree of a directed graph (referred to a _minimum-cost arborescence_ or _optimal branching_) are more complex [@Korte2018a], and not at present supported in `igraph`.
-While there is some asymmetry in paths between locations depending on the direction of travel, it is not extreme, and so we approximate a solution by finding the minimum spanning tree links (i.e. direct connections) among sites treating our network as undirected, and then determine paths over the ground to make the connections between sites based on the directed hiking network.
-The resulting path network for the same set of sites is shown in @fig-approx-minimum-arborescence.
+One refinement here, which we do not account for is that algorithms for finding the minimum spanning tree of a directed graph (referred to as a _minimum-cost arborescence_ or _optimal branching_) are more complex [@Korte2018a], and not at present supported in `igraph`.
+While there is some asymmetry in paths between locations depending on the direction of travel, it is not extreme, and so we approximate a solution by finding the minimum spanning tree links (i.e. direct connections) among sites treating our network as undirected, and then determine paths over the ground to make the identified connections between sites based on the directed hiking network.
+The resulting path network for the same set of sites as in @fig-betweenness-limited-sites is shown in @fig-approx-minimum-arborescence.
 
 ```{r}
 dist_m <- distances(G, origin_vs$id, origin_vs$id, weights = edge_attr(G, "cost"))
