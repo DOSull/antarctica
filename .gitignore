@@ -17,3 +17,5 @@ _dev/
 /.quarto/
 *.zip
 .vscode/settings.json
+paper_files/
+paper_cache/

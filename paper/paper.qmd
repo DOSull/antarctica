@@ -29,13 +29,6 @@ format:
     number-sections: true
     number-depth: 3
     self-contained: true
-  # pdf:
-  #   documentclass: article
-  #   classoption: [11pt]
-  #   toc: false
-  #   number-sections: true
-  #   number-depth: 3
-  #   linestretch: 1.15
 execute:
   echo: false
   warning: false
