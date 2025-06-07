@@ -18,19 +18,24 @@ lightbox: true
 navbar: false
 sidebar: false
 format: 
+  typst:
+    toc: false
+    number-sections: true
+    fig-format: png
+    fig-dpi: 600
   html:
     toc: true
     # code-fold: true
     number-sections: true
     number-depth: 3
     self-contained: true
-  pdf:
-    documentclass: article
-    classoption: [11pt]
-    toc: false
-    number-sections: true
-    number-depth: 3
-    linestretch: 1.15
+  # pdf:
+  #   documentclass: article
+  #   classoption: [11pt]
+  #   toc: false
+  #   number-sections: true
+  #   number-depth: 3
+  #   linestretch: 1.15
 execute:
   echo: false
   warning: false
@@ -50,11 +55,11 @@ figcaption {color: black;}
 #| output: false
 
 library(ggplot2)
-library(ggpubr)
 library(grid)
 library(cols4all)
 library(ggnewscale)
 library(ggspatial)
+library(patchwork)
 
 library(tidyr)
 library(dplyr)
@@ -296,7 +301,8 @@ ggplots <- list()
 for (n in names(graphs)) {
   ggplots[[n]] <- get_graph_plot(G = graphs[[n]], main = n)
 }
-ggarrange(plotlist = ggplots, ncol = 2, nrow = 2)
+
+wrap_plots(ggplots, nrow = 2)
 ```
 
 The advantage of a square lattice is that is east to derive vertex elevations assuming a DEM at the desired lattice spacing is available. 
@@ -331,66 +337,45 @@ When an edge connects locations of two different land cover types the estimated 
 ## Data sources
 ### Antarctic geospatial data
 Geospatial data for Antarctica were obtained from sources referenced in @Cox2023, @Cox2023a, and @Felden2023.
-The study area was defined to be the Skelton and Dry Valleys basins, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project [@Mouginot2017] and shown in @fig-locator-map.
-The Skelton basin was included because while the expedition GPS data was ostensibly collected in the McMurdo Dry Valleys, it actually extends into that basin as shown in @fig-study-area-map.
-Elevation data from the Reference Elevation Model of Antarctica (REMA) project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-dem-and-geology.
-The five largest areas of contiguous non-ice surface geology across the study area shown in @fig-five-subregions were chosen to be the specific sites for more detailed exploration using the methods set out in this paper.
+The study area was defined to be the Skelton and Dry Valleys basins, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project [@Mouginot2017] and shown in @fig-study-area(a).
+The Skelton basin was included because while the expedition GPS data was ostensibly collected in the McMurdo Dry Valleys, it actually extends into that basin as shown in @fig-study-area(b).
+Elevation data from the Reference Elevation Model of Antarctica (REMA) project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-study-area(c).
+The five largest areas of contiguous non-ice surface geology across the study area shown in @fig-study-area(d) were chosen to be the specific sites for more detailed exploration using the methods set out in this paper.
 These range in size from around 320 to 2600 square kilometres.
 
-::: {#fig-study-area layout="[[50,-1,50], [50,-1,50]]"}
-
 ```{r}
-#| label: fig-locator-map
-#| fig-cap: "Study area location in Antarctica"
+#| echo: false
+
 theme_set(theme_minimal())
-theme_update(
-  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5),
-  panel.grid = element_line(colour = "black", linewidth = 0.05),
-  panel.ontop = TRUE
-)
 bb1 <- st_bbox(study_area)
-ggplot() +
+g31 <- ggplot() +
   geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
-  geom_sf(data = study_area, fill = "#666666", colour = "white") +
+  geom_sf(data = study_area, fill = "#666666", colour = NA, lwd = 0) +
   annotate("rect", xmin = bb1[1], ymin = bb1[2], 
-                   xmax = bb1[3], ymax = bb1[4], fill = "#00000000", colour = "red", lwd = 0.25)
-```
+                   xmax = bb1[3], ymax = bb1[4], fill = "#00000000", colour = "red") +
+  theme(panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5),
+        panel.grid = element_line(colour = "black", linewidth = 0.05),
+        panel.ontop = TRUE)
 
-```{r}
-#| label: fig-study-area-map
-#| fig-cap: "Skelton and Dry Valleys basins"
 theme_set(theme_void())
-theme_update(
-  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5)
-)
-ggplot() +
+g32 <- ggplot() +
   geom_sf(data = coastline, fill = "#eff3ff", colour = "#00000000") +
   geom_sf(data = study_basins, fill = "gray", colour = "white") +
-  geom_sf(data = coastline, fill = "#00000000", colour = "#3182bd", lwd = 0.35) +
+  geom_sf(data = coastline, fill = "#00000000", colour = "#3182bd") +
   geom_sf(data = gps_data, colour = "red", size = 0.025) +
-  geom_sf_text(data = study_basins, aes(label = NAME)) +
+  geom_sf_text(data = study_basins, aes(label = NAME), size = 3) +
   coord_sf(xlim = bb1[c(1, 3)], ylim = bb1[c(2, 4)]) +
   annotation_scale(height = unit(0.1, "cm"), location = "tr") +
-  annotation_north_arrow(style = north_arrow_minimal, which_north = "true", location = "br")
-```
+  theme(panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5))
 
-```{r}
-#| label: fig-dem-and-geology
-#| fig-cap: "Study area elevation (hillshade) and surface geology"
-theme_set(theme_void())
-theme_update(
-  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5),
-  legend.position = c(0.02, 0.02),
-  legend.justification = c(0, 0)
-)
 top5 <- contiguous_geologies |> 
   arrange(desc(area)) |> 
   slice(1:5)
 bb2 <- st_bbox(top5)
-ggplot() +
-  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd", lwd = 0.35) +
-  geom_sf(data = study_area, fill = "#00000000", colour = "darkblue", lwd = 0.35) +
-  geom_sf(data = geology, aes(fill = POLYGTYPE), linewidth = 0) +
+g33 <- ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
+  geom_sf(data = study_area, fill = "#00000000", colour = "darkblue") +
+  geom_sf(data = geology, aes(fill = POLYGTYPE), linewidth = 0, colour = NA) +
   scale_fill_manual(values = c("dodgerblue", "#fec44f", "#993404"), name = "Geology") + 
   new_scale("fill") +
   geom_raster(data = shade8, aes(x = x, y = y, fill = shade), alpha = 0.5) +
@@ -398,27 +383,30 @@ ggplot() +
   annotate("rect", xmin = bb2[1], ymin = bb2[2], 
                    xmax = bb2[3], ymax = bb2[4], fill = "#00000000", 
                    colour = "red", lwd = 0.25, linetype = "dashed") +
-  coord_sf(xlim = bb1[c(1, 3)], ylim = bb1[c(2, 4)])
+  coord_sf(xlim = bb1[c(1, 3)], ylim = bb1[c(2, 4)]) +
+  theme(panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5))
+
+small_geologies <- contiguous_geologies |> 
+  filter(area < min(top5$area))
+g34 <- ggplot() +
+  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
+  geom_sf(data = geology, aes(fill = POLYGTYPE), linewidth = 0, colour = NA) +
+  scale_fill_manual(values = c("dodgerblue", "#fec44f", "#993404"), name = "Geology") + 
+  geom_sf(data = small_geologies, fill = "#ffffffc0", colour = "darkgrey") +
+  # geom_sf(data = top5, fill = NA, colour = "black", linewidth = 0.2) +
+  guides(fill = "none") +
+  annotation_scale(height = unit(0.1, "cm")) +
+  coord_sf(xlim = bb2[c(1, 3)], ylim = bb2[c(2, 4)]) +
+  theme(panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5))
 ```
 
 ```{r}
-#| label: fig-five-subregions
-#| fig-cap: "Five sub-regions of contiguous surface geology"
-theme_set(theme_void())
-theme_update(
-  panel.border = element_rect(fill = NA, colour = "black", linewidth = 0.5)
-)
-ggplot() +
-  geom_sf(data = coastline, fill = "#eff3ff", colour = "#3182bd") +
-  geom_sf(data = contiguous_geologies, fill = "#eeeeee", colour = "darkgrey") +
-  geom_sf(data = top5, fill = "#fcbba1", colour = "black", linewidth = 0.25) +
-  guides(fill = "none") +
-  annotation_scale(height = unit(0.1, "cm")) +
-  coord_sf(xlim = bb2[c(1, 3)], ylim = bb2[c(2, 4)])
-```
+#| label: fig-study-area
+#| fig-cap: "The study area: (a) Study area location in Antarctica; (b) Skelton and Dry Valleys basins; (c) Study area elevation (hillshade) and surface geology; and (d) Five sub-regions of contiguous surface geology."
 
-The study area.
-:::
+(g31 + g32) / (g33 + g34 + plot_layout(guides = "collect")) + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
 
 ### GPS data from an expedition
 **FRASER**: Timeline, devices used, and associated protocols for scientists while on site.
@@ -437,9 +425,9 @@ The third, more challenging processing step was to deal with sequences of fixes 
 Crude filters removed fixes with low recorded distances between fixes (less than 2.5 metres), high turn angles at the fix location (greater than 150&deg;), and fixes recorded on ice-covered terrain, but this didi not clean the data sufficiently for further analysis.
 An additional filtering step was to count fixes (across all scientists) in square grid cells and remove all fixes in grid cells with more than 50 fixes.
 
-This left one persistent concern: an over-representation of consecutive fixes recorded at exactly the same elevation, resulting in many fixes with estimated slopes of exactly 0, and leading to a clearly evident dip in estimated movement speeds at 0 slope (@fig-raw-gps-data). 
+This left one persistent concern: an over-representation of consecutive fixes recorded at exactly the same elevation, resulting in many fixes with estimated slopes of exactly 0, and leading to a clearly evident dip in estimated movement speeds at 0 slope (@fig-gps-data(a)). 
 It is likely that these fixes are associated with GPS device drift, so a it was decided to remove all fixes where estimated slope was exactly 0.
-@fig-filtered-gps-data shows the improvement in even a crudely estimated hiking function derived from local scatterplot (LOESS) smoothing.
+@fig-gps-data(b) shows the improvement in even a crudely estimated hiking function derived from local scatterplot (LOESS) smoothing.
 Note that such functions are likely overfitted and not used further in our analysis where we favour more easily parameterised functions such as those discussed in @sec-hiking-functions.
 
 ```{r}
@@ -462,14 +450,8 @@ gps_geol <- gps_data |>
   filter(cover != "ice", height_m > 0) |>
   mutate(slope_h_round = round(slope_h * 10) / 10) |>
   drop_na()
-```
 
-::: {#fig-gps-data layout="[[50,-1,50]]"}
-
-```{r}
-#| label: fig-raw-gps-data
-#| fig-cap: "Boxplots by slope of speed, with smoothed estimated hiking function showing a 'dip' due to over-representation of 0 slope fixes"
-ggplot(gps_geol |> filter(slope_h >= -1, slope_h <= 1.0)) +
+g41 <- ggplot(gps_geol |> filter(slope_h >= -1, slope_h <= 1.0)) +
   geom_boxplot(aes(x = round(slope_h, 1), y = speed_km_h, group = round(slope_h, 1)), 
                outlier.size = 0.2, colour = "grey", linewidth = 0.5) +
   stat_smooth(aes(x = slope_h, y = speed_km_h)) +
@@ -478,8 +460,7 @@ ggplot(gps_geol |> filter(slope_h >= -1, slope_h <= 1.0)) +
 ```
 
 ```{r}
-#| label: fig-filtered-gps-data
-#| fig-cap: "After filtering the estimated hiking function no longer has a dip."
+#| output: false
 hexes <- gps_geol |> 
   st_make_grid(cellsize = 100, square = FALSE, what = "polygons") |>
   st_as_sf(crs = st_crs(gps_geol)) |>
@@ -499,7 +480,7 @@ gps_geol_purposive <- gps_geol |>
   st_join(hexes) |>
     filter(n <= 50)
 
-ggplot(gps_geol_purposive) +
+g42 <- ggplot(gps_geol_purposive) +
   geom_boxplot(aes(x = round(slope_h, 1), y = speed_km_h, group = round(slope_h, 1)), 
                outlier.size = 0.2, colour = "grey", linewidth = 0.5) +
   stat_smooth(aes(x = slope_h, y = speed_km_h)) +
@@ -507,8 +488,12 @@ ggplot(gps_geol_purposive) +
   theme_minimal()
 ```
 
-GPS data and crudely estimated hiking functions before and after filtering the to remove fixes associated with non-purposive movement.
-:::
+```{r}
+#| label: fig-gps-data
+#| fig-cap: "GPS data and crudely estimated hiking functions before and after filtering the to remove fixes associated with non-purposive movement: (a) Boxplots by slope of speed, with smoothed estimated hiking function showing a 'dip' due to over-representation of 0 slope fixes; and (b) After filtering the estimated hiking function no longer has a dip."
+g41 + g42 + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
 
 ## Methods and results
 ### Hiking functions {#sec-hiking-function-estimation}
@@ -651,7 +636,7 @@ where the different maximum speeds (in kilometres per hour) and slopes of maximu
 We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
 Graphs are manipulated as `igraph` package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
 An important decision in constructing graphs is choice of the spacing of the hexagonal lattice, and also of the underlying DEM from which graph vertex elevations are derived.
-Given the extent of the study sites (see @fig-five-subregions) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
+Given the extent of the study sites (see @fig-study-area(d)) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
 The hexagon centre to centre spacing of this lattice is given by 
 $$
 100\sqrt{\frac{2}{\sqrt{3}}}\approxeq 107.5\,\mathrm{metres}
@@ -666,9 +651,9 @@ Removing edges in both directions is partly a practical matter as it simplifies 
 After removal of all such edges only the largest connected graph component is retained so that the resulting hiking network representation is fully connected with no isolated vertices unreachable from elsewhere in the network remaining.
 A map of the fifth largest study area's hiking network is shown in @fig-hiking-network-example.
 This network includes 30,697 vertices and 174,798 directed edges. 
-The largest of the five study sites (see @fig-five-subregions) results in a network containing almost a quarter of a million vertices and over 1.4 million directed edges.
+The largest of the five study sites (see @fig-study-area(d)) results in a network containing almost a quarter of a million vertices and over 1.4 million directed edges.
 A hiking network can be used to explore many connectivity properties of the environment.
-For example, for a chosen origin point, a _shortest path tree_ can be derived showing the route (@fig-shortest-path-tree). 
+For example, for a chosen origin point, a _shortest path tree_ can be derived showing the route (@fig-hiking-network-example(c)). 
 
 ```{r}
 #| output: false
@@ -730,13 +715,10 @@ remaining_nodes <- V(G)$id
 pts <- pts |> slice(remaining_nodes)
 ```
 
-::: {#fig-hiking-network-example layout="[[50,-1,50], [50,-1,50]]"}
-
 ```{r}
-#| label: fig-map-of-hiking-network
-#| fig-cap: "Map of a hiking network coloured by estimated traversal times of edges" 
+#| output: false
 bb <- (extent |> st_bbox() |> as.vector()) + c(1.05e4, 1.25e4, -1.45e4, -1.35e4)
-ggplot() +
+g71 <- ggplot() +
   geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
   scale_fill_distiller(palette = "Greys", direction = 1) +
   geom_sf(data = G |> get_graph_as_line_layer(append_attributes = TRUE),
@@ -748,12 +730,8 @@ ggplot() +
            fill = NA, colour = "red", linewidth = 0.35) +
   annotation_scale(plot_unit = "m", height = unit(0.1, "cm")) +
   theme_void()
-```
 
-```{r}
-#| label: fig-zoomed-in-map-of-hiking-network
-#| fig-cap: "Red-outlined area zoomed in revealing edges removed from graph due to steep slopes" 
-ggplot() +
+g72 <- ggplot() +
   geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
   scale_fill_distiller(palette = "Greys", direction = 1) +
   geom_sf(data = G |> get_graph_as_line_layer(append_attributes = TRUE),
@@ -762,11 +740,7 @@ ggplot() +
   coord_sf(xlim = bb[c(1, 3)], ylim = bb[c(2, 4)], expand = FALSE) +
   guides(fill = "none", colour = "none") +
   theme_void()
-```
 
-```{r}
-#| label: fig-shortest-path-tree
-#| fig-cap: "Shortest path tree of a hiking network from the indicated origin" 
 centroid <- extent |>
   st_centroid() |> 
   st_nearest_feature(pts)
@@ -775,7 +749,7 @@ spt <- G |> get_shortest_path_tree(vid = centroid) |>
   get_graph_as_line_layer()
 
 bb <- (extent |> st_bbox() |> as.vector()) +  + c(1.35e4, 0.8e4, -0.9e4, -1.55e4)
-ggplot() +
+g73 <- ggplot() +
   geom_sf(data = extent, colour = NA) +
   geom_sf(data = spt, colour = "black", linewidth = 0.05) +
   geom_sf(data = pts |> slice(centroid)) +
@@ -784,12 +758,8 @@ ggplot() +
   annotate("rect", xmin = bb[1], ymin = bb[2], xmax = bb[3], ymax = bb[4], 
            fill = NA, colour = "red", linewidth = 0.35) +
   theme_void()
-```
 
-```{r}
-#| label: fig-zoomed-in-shortest-path-tree
-#| fig-cap: "Red-outlined area zoomed in view of the shortest path tree" 
-ggplot() +
+g74 <- ggplot() +
   geom_raster(data = shade, aes(x = x, y = y, fill = hillshade), alpha = 0.65) +
   scale_fill_distiller(palette = "Greys", direction = 1) +
   geom_sf(data = spt, colour = "black", linewidth = 0.2) +
@@ -799,9 +769,13 @@ ggplot() +
   theme_void()
 ```
 
-A hiking network derived for the fifth largest study site shown in @fig-five-subregions.
+```{r}
+#| label: fig-hiking-network-example
+#| fig-cap: "A hiking network derived for the fifth largest study site shown in @fig-study-area(d): (a) Map of a hiking network coloured by estimated traversal times of edges; (b) Red-outlined area zoomed in revealing edges removed from graph due to steep slopes; (c) Shortest path tree of a hiking network from the indicated origin; and (d) Red-outlined area zoomed in view of the shortest path tree."
 
-:::
+(g71 + g72 + plot_layout(guides = "collect")) / (g73 + g74) + 
+  plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")")
+```
 
 ### Betweenness centrality
 The connectivity properties of a hiking graph can be described using a range of measures of graph structure and used to reveal the relative likelihood of different parts of a terrain being frequently traversed.
