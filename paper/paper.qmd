@@ -879,7 +879,7 @@ This is relatively straightforward and like radius limited betweenness involves 
 One slight simplification we make for performance reasons is to weight every appearance of a vertex on a geodesic as equal, even if multiple equal length shortest paths exist between two vertices. 
 In practice, this is unlikely to have much effect on the resulting estimates of relative betweenness, since with real-valued edge costs two paths of exactly equal cost are unlikely.
 An example result is shown in @fig-betweenness-limited-sites.
-One refinement shown in the figure is that sites have been waited by relative importance so that a site such as an expedition base camp can be expected to originate more trips than other sites.
+One refinement shown in the figure is that sites have been weighted by relative importance so that a site such as an expedition base camp can be expected to originate more trips than other sites.
  
 ```{r}
 # make a random set of locations with guaranteed minimum separation
