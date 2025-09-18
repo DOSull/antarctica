@@ -1,0 +1,242 @@
+---
+title: "Modelling potential environmental impacts of science activity in Antarctica"
+title-slide-attributes:
+    data-background-image: background-image.png
+author: 
+  - name: David O'Sullivan
+    affiliations: 
+      - name: Geospatial Stuff
+      - name: University of Auckland
+  - name: Fraser Morgan
+    affiliations: 
+      - name: Bioeconomy Science Institute
+format:
+  revealjs:
+    theme: white
+    css: custom.scss
+    transition: none
+    navigation-mode: vertical
+    fragment-in-url: true
+    slide-number: false
+    logo: logo.png
+    footer: "Palmerston North Regional GIS Forum, September 2025"
+    self-contained: true
+---
+
+
+## Overview {.smaller}
+### [Study area](#study-area-1)
+### [GPS data](#gps-data-1)
+### [Building a hiking network](#building-a-hiking-network-1)
+### [Results](#results-1)
+### [Conclusions](#conclusions-1)
+
+# Study area {.smaller background-image="background-image.png" background-opacity="0.5"}
+
+##
+![](fig-study-area-1.png)
+
+# GPS data {.smaller background-image="background-image.png" background-opacity="0.5"}
+
+##
+::: {.columns}
+::: {.column width=35%}
+![](gps-device-picture.jpg)
+:::
+::: {.column width=65%}
+Collected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018
+
+40+ hour battery life and simple use
+
+Location recorded every 30 seconds 
+
+Scientists turned devices on when leaving base camp in the morning and off on return at the end of the day
+:::
+:::
+
+## The Dry Valleys {background-image="bing-maps-imagery.png"}
+[Bing maps aerial imagery]{.aside}
+
+## And on the ground {background-image="google-street-view.jpg"}
+[Yup! There's streetview imagery]{.aside}
+
+
+
+# Hiking networks {.smaller background-image="background-image.png" background-opacity="0.5"}
+
+## Building a hiking network
+
+Start with a regular lattice across the study area
+
+Many topologies could be used
+
+```{r}
+#| label: lattice-adjacencies
+#| fig-width: 8
+#| fig-height: 2.5
+
+library(sf)
+library(igraph)
+library(ggplot2)
+library(patchwork)
+library(dplyr)
+library(tidyr)
+
+source("raster-to-graph-functions-paper.R")
+
+theme_set(theme_void()) 
+theme_update(
+  plot.margin = unit(c(1, 1, 2, 1), "mm"),
+  plot.title = element_text(hjust = 0.5, vjust = 2))
+
+get_lattice <- function(dist, pts) {
+  pts |>
+    st_buffer(dist) |>
+    st_contains(pts, sparse = FALSE) |>
+    as.matrix() |>
+    graph_from_adjacency_matrix(mode = "directed", diag = FALSE) |>
+    set_vertex_attr("x", value = pts$x) |>
+    set_vertex_attr("y", value = pts$y)
+}
+
+get_graph_plot <- function(G, main, crs = 2193) {
+  return(ggplot() +
+    geom_sf(data = G |> 
+              get_graph_as_line_layer(crs = 2193), lwd = 0.35) +
+    geom_sf(data = G |> 
+              vertex_attr() |> as.data.frame() |> st_as_sf(coords = 1:2, crs = crs), 
+            size = 8, fill = "white", colour = "black", shape = 21, lwd = 1) +
+    coord_sf(xlim = c(-270, 270) + 1e6, 
+             ylim = c(-270, 270) + 1e6, expand = FALSE) +
+    ggtitle(main))
+}
+
+grid_pts <- expand_grid(x = -20:20 * 100 + 1e6, y = -20:20 * 100 + 1e6) |>
+  as.data.frame() |>
+  st_as_sf(coords = c("x", "y"), crs = 2193, remove = FALSE)
+
+hex_grid_pts <- grid_pts |>
+  st_bbox() |> 
+  st_make_grid(square = FALSE, what = "centers", cellsize = 107.457) |>
+  st_as_sf() |>
+  rename(geometry = x) |>
+  mutate(geometry = geometry + c(-12, -3)) |>
+  st_set_crs(2193)
+
+xy <- hex_grid_pts |> st_coordinates()
+hex_grid_pts <- hex_grid_pts |>
+  mutate(x = xy[, 1], y = xy[, 2])
+
+graphs <- mapply(
+  get_lattice,
+  list(101, 150, 225, 110),
+  list(grid_pts, grid_pts, grid_pts, hex_grid_pts))
+names(graphs) <- list("Rook's move", "Queen's move", "Knight's move", "Hex")
+
+ggplots <- list()
+for (n in names(graphs)) {
+  ggplots[[n]] <- get_graph_plot(G = graphs[[n]], main = n)
+}
+
+wrap_plots(ggplots, nrow = 1)
+```
+
+We went with hexagonal at ~100m spacing
+
+## Up $\neq$ down {background-image="klondike.jpg" background-opacity="50%"}
+
+Slope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges
+
+Then apply a *hiking function* to estimate traversal times
+
+::: aside
+[People heading uphill in the Klondike gold rush 1897](https://www.nps.gov/klgo/learn/goldrush.htm) National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831
+:::
+
+## Hiking functions
+![](fig-hiking-functions-1.png)
+
+## Smoothing GPS data
+![](fig-gps-data-1.png)
+
+## Curve fitting to cleaned data
+![](fig-comparison-of-hiking-functions-1.png)
+
+## Terrain-dependent _vs_ combined
+![](fig-models-by-cover-compared-1.png)
+
+## Completing and applying the network
+
+Assign edges *estimated traversal times* based on slope, the hiking function, and land cover (moraine or rock)
+
+Make the nodes and edges into a _directed graph_
+
+Then use various _graph algorithms_ to find, e.g., everywhere-to-everywhere shortest paths
+
+# Some outputs {.smaller background-image="background-image.png" background-opacity="0.5"}
+
+##
+![](fig-hiking-network-example-1.png)
+
+## Betweenness centrality
+After some exploration, we settled on _betweenness centrality_ as a graph metric that might be useful
+
+This measure counts how many times each node appears on the shortest paths between every other pair of nodes
+
+An indicator of the relative likelihood of each location being visited
+
+## 
+
+![](fig-betweenness-map-1.png)
+
+## Radius-limited betweenness
+Restrict betweenness centrality to nodes no more than some time apart
+
+This is _much_ faster to calculate (yay!)
+
+Also... it looks like it has more value
+
+It (perhaps) is relevant to how people navigate in such environments
+
+##
+
+![](fig-radius-limited-betweenness-1.png)
+
+## Planning a path network?
+
+One way to minimise impact might be to plan paths
+
+This is _experimental_ at this stage
+
+Based on a _minimum spanning tree_ approximation to an _arborescence_
+
+::: aside
+A minimum spanning tree is subgraph with minimum total cost that reaches all the nodes in a network. An arborescence is the equivalent in a directed graph.
+:::
+
+##
+
+![](fig-betweenness-limited-sites-1.png)
+
+##
+
+![](fig-approx-minimum-arborescence-1.png)
+
+---
+
+## Conclusions
+Terrain differentiated fitted hiking functions are a novelty
+
+Potential wider application of radius-limited betweenness centrality?
+
+A manuscript almost finished
+
+&nbsp;
+
+#### For more
+* On this project: [dosull.github.io/antarctica](https://dosull.github.io/antarctica)
+
+* About Geospatial Stuff: [dosull.github.io](https://dosull.github.io)
+
+# {background-image="background-image.png"}
+[Questions?]{style="font-size:200px;opacity:25%;text-align:center;"}
