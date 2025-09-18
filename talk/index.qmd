@@ -2,6 +2,7 @@
 title: "Modelling potential environmental impacts of science activity in Antarctica"
 title-slide-attributes:
     data-background-image: background-image.png
+    data-background-opacity: "0.5"
 author: 
   - name: David O'Sullivan
     affiliations: 
@@ -12,7 +13,7 @@ author:
       - name: Bioeconomy Science Institute
 format:
   revealjs:
-    theme: white
+    theme: black
     css: custom.scss
     transition: none
     navigation-mode: vertical
@@ -71,10 +72,6 @@ Start with a regular lattice across the study area
 Many topologies could be used
 
 ```{r}
-#| label: lattice-adjacencies
-#| fig-width: 8
-#| fig-height: 2.5
-
 library(sf)
 library(igraph)
 library(ggplot2)
@@ -102,13 +99,16 @@ get_lattice <- function(dist, pts) {
 get_graph_plot <- function(G, main, crs = 2193) {
   return(ggplot() +
     geom_sf(data = G |> 
-              get_graph_as_line_layer(crs = 2193), lwd = 0.35) +
+              get_graph_as_line_layer(crs = 2193), lwd = 0.35, colour = "white") +
     geom_sf(data = G |> 
               vertex_attr() |> as.data.frame() |> st_as_sf(coords = 1:2, crs = crs), 
-            size = 8, fill = "white", colour = "black", shape = 21, lwd = 1) +
+            size = 8, fill = "black", colour = "white", shape = 21, lwd = 1) +
     coord_sf(xlim = c(-270, 270) + 1e6, 
              ylim = c(-270, 270) + 1e6, expand = FALSE) +
-    ggtitle(main))
+    ggtitle(main)) +
+    theme(
+      plot.background = element_rect(fill = "black"),
+    )
 }
 
 grid_pts <- expand_grid(x = -20:20 * 100 + 1e6, y = -20:20 * 100 + 1e6) |>
@@ -129,16 +129,26 @@ hex_grid_pts <- hex_grid_pts |>
 
 graphs <- mapply(
   get_lattice,
-  list(101, 150, 225, 110),
-  list(grid_pts, grid_pts, grid_pts, hex_grid_pts))
-names(graphs) <- list("Rook's move", "Queen's move", "Knight's move", "Hex")
+  # list(101, 150, 225, 110),
+  list(101, 150, 110),
+  # list(grid_pts, grid_pts, grid_pts, hex_grid_pts))
+  list(grid_pts, grid_pts, hex_grid_pts))
+# names(graphs) <- list("Rook's move", "Queen's move", "Knight's move", "Hex")
+names(graphs) <- list("Rook's move", "Queen's move", "Hex")
+```
 
+```{r}
+#| fig-width: 8
+#| fig-height: 3.045
 ggplots <- list()
 for (n in names(graphs)) {
   ggplots[[n]] <- get_graph_plot(G = graphs[[n]], main = n)
 }
 
-wrap_plots(ggplots, nrow = 1)
+wrap_plots(ggplots, nrow = 1) & theme(
+  plot.background = element_rect(fill = "black"),
+  text = element_text(colour = "white")
+)
 ```
 
 We went with hexagonal at ~100m spacing
@@ -225,7 +235,7 @@ A minimum spanning tree is subgraph with minimum total cost that reaches all the
 ---
 
 ## Conclusions
-Terrain differentiated fitted hiking functions are a novelty
+Terrain-differentiated data-fitted hiking functions are a novelty
 
 Potential wider application of radius-limited betweenness centrality?
 
@@ -239,4 +249,4 @@ A manuscript almost finished
 * About Geospatial Stuff: [dosull.github.io](https://dosull.github.io)
 
 # {background-image="background-image.png"}
-[Questions?]{style="font-size:200px;opacity:25%;text-align:center;"}
+[Questions?]{style="font-size:200px;color:black;opacity:25%;text-align:center;"}
