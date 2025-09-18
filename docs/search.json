@@ -779,5 +779,264 @@
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "6 Conclusions",
     "text": "6 Conclusions\nTo cover:\n\nNovelty of fitting land cover specific hiking functions\nA method for exploring potential impacts in a novel environment\nA method for proposing less damaging plans for expeditions\nOther?"
+  },
+  {
+    "objectID": "talk/index.html#overview",
+    "href": "talk/index.html#overview",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Overview",
+    "text": "Overview\nStudy area\nGPS data\nBuilding a hiking network\nResults\nConclusions"
+  },
+  {
+    "objectID": "talk/index.html#data",
+    "href": "talk/index.html#data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Data",
+    "text": "Data"
+  },
+  {
+    "objectID": "talk/index.html#hiking-functions",
+    "href": "talk/index.html#hiking-functions",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Hiking functions",
+    "text": "Hiking functions"
+  },
+  {
+    "objectID": "talk/index.html#hiking-networks",
+    "href": "talk/index.html#hiking-networks",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Hiking networks",
+    "text": "Hiking networks"
+  },
+  {
+    "objectID": "talk/index.html#results",
+    "href": "talk/index.html#results",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Results",
+    "text": "Results"
+  },
+  {
+    "objectID": "talk/index.html#conclusion",
+    "href": "talk/index.html#conclusion",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Conclusion",
+    "text": "Conclusion"
+  },
+  {
+    "objectID": "talk/index.html#antarctica",
+    "href": "talk/index.html#antarctica",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Antarctica",
+    "text": "Antarctica"
+  },
+  {
+    "objectID": "talk/index.html#gps-data",
+    "href": "talk/index.html#gps-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "GPS data",
+    "text": "GPS data\n\n\n\n\nCollected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018\n40+ hour battery life and simple use\nLocation recorded every 30 seconds\nScientists turned devices on when leaving base camp in the morning and off on return at the end of the day"
+  },
+  {
+    "objectID": "talk/index.html#study-area",
+    "href": "talk/index.html#study-area",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Study area",
+    "text": "Study area"
+  },
+  {
+    "objectID": "talk/index.html#up-neq-down",
+    "href": "talk/index.html#up-neq-down",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Up \\(\\neq\\) down",
+    "text": "Up \\(\\neq\\) down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen apply a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
+  },
+  {
+    "objectID": "talk/index.html#building-a-hiking-network",
+    "href": "talk/index.html#building-a-hiking-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Building a hiking network",
+    "text": "Building a hiking network\nStart with a regular lattice across the study area\nA range of topologies are available\n\nWe went with hexagonal at ~100m spacing"
+  },
+  {
+    "objectID": "talk/index.html#derived-from-data",
+    "href": "talk/index.html#derived-from-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived from data",
+    "text": "Derived from data"
+  },
+  {
+    "objectID": "talk/index.html#derived-from-raw-data",
+    "href": "talk/index.html#derived-from-raw-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived from raw data",
+    "text": "Derived from raw data"
+  },
+  {
+    "objectID": "talk/index.html#derived-from-cleaned-data",
+    "href": "talk/index.html#derived-from-cleaned-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived from cleaned data",
+    "text": "Derived from cleaned data"
+  },
+  {
+    "objectID": "talk/index.html#compared-with-a-combined-model",
+    "href": "talk/index.html#compared-with-a-combined-model",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Compared with a combined model",
+    "text": "Compared with a combined model"
+  },
+  {
+    "objectID": "talk/index.html#derived-from-smoothed-data",
+    "href": "talk/index.html#derived-from-smoothed-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived from smoothed data",
+    "text": "Derived from smoothed data"
+  },
+  {
+    "objectID": "talk/index.html#derived-by-smoothing-gps-data",
+    "href": "talk/index.html#derived-by-smoothing-gps-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived by smoothing GPS data",
+    "text": "Derived by smoothing GPS data"
+  },
+  {
+    "objectID": "talk/index.html#derived-by-curve-fittingh-to-cleaned-data",
+    "href": "talk/index.html#derived-by-curve-fittingh-to-cleaned-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Derived by curve fittingh to cleaned data",
+    "text": "Derived by curve fittingh to cleaned data"
+  },
+  {
+    "objectID": "talk/index.html#smoothing-gps-data",
+    "href": "talk/index.html#smoothing-gps-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Smoothing GPS data",
+    "text": "Smoothing GPS data"
+  },
+  {
+    "objectID": "talk/index.html#curve-fittingh-to-cleaned-data",
+    "href": "talk/index.html#curve-fittingh-to-cleaned-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Curve fittingh to cleaned data",
+    "text": "Curve fittingh to cleaned data"
+  },
+  {
+    "objectID": "talk/index.html#the-dry-valleys",
+    "href": "talk/index.html#the-dry-valleys",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "The Dry Valleys",
+    "text": "The Dry Valleys\nBing maps aerial imagery"
+  },
+  {
+    "objectID": "talk/index.html#curve-fitting-to-cleaned-data",
+    "href": "talk/index.html#curve-fitting-to-cleaned-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Curve fitting to cleaned data",
+    "text": "Curve fitting to cleaned data"
+  },
+  {
+    "objectID": "talk/index.html#and-on-the-ground",
+    "href": "talk/index.html#and-on-the-ground",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "And on the ground",
+    "text": "And on the ground\nYup! There’s streetview imagery"
+  },
+  {
+    "objectID": "talk/index.html#terrain-dependent-vs-combined",
+    "href": "talk/index.html#terrain-dependent-vs-combined",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Terrain-dependent vs combined",
+    "text": "Terrain-dependent vs combined"
+  },
+  {
+    "objectID": "talk/index.html#completing-and-applying-the-network",
+    "href": "talk/index.html#completing-and-applying-the-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Completing and applying the network",
+    "text": "Completing and applying the network\nAssign edges estimated traversal times based on slope, the hiking function, and land cover (moraine or rock)\nMake the nodes and edges into a directed graph\nThen use various graph algorithms to find, e.g., everywhere-to-everywhere shortest paths"
+  },
+  {
+    "objectID": "talk/index.html#section-1",
+    "href": "talk/index.html#section-1",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "",
+    "text": "Collected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018\n40+ hour battery life and simple use\nLocation recorded every 30 seconds\nScientists turned devices on when leaving base camp in the morning and off on return at the end of the day"
+  },
+  {
+    "objectID": "talk/index.html#betweenness-centrality",
+    "href": "talk/index.html#betweenness-centrality",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Betweenness centrality",
+    "text": "Betweenness centrality\nAfter some exploration, we settled on betweenness centrality as a graph metric that might be useful\nThis measure counts how many times each node appears on the shortest paths between every other pair of nodes\nAn indicator of the relative likelihood of each location being visited"
+  },
+  {
+    "objectID": "talk/index.html#radius-limited-betweenness",
+    "href": "talk/index.html#radius-limited-betweenness",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Radius-limited betweenness",
+    "text": "Radius-limited betweenness\nRestrict betweenness centrality to nodes no more than some time apart\nThis is much faster to calculate (yay!)\nAlso… it looks like it has more value\nIt (perhaps) is relevant to how people navigate in such environments"
+  },
+  {
+    "objectID": "talk/index.html#planning-a-path-network",
+    "href": "talk/index.html#planning-a-path-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Planning a path network?",
+    "text": "Planning a path network?\nOne way to minimise impact might be to plan paths\nThis is experimental at this stage\nBased on a minimum spanning tree approximation to an arborescence\n\n\nA minimum spanning tree is subgraph with minimum total cost that reaches all the nodes in a network. An arborescence is the equivalent in a directed graph."
+  },
+  {
+    "objectID": "talk/index.html#building-a-hiking-network-1",
+    "href": "talk/index.html#building-a-hiking-network-1",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Building a hiking network",
+    "text": "Building a hiking network\nStart with a regular lattice across the study area\nMany topologies could be used\n\nWe went with hexagonal at ~100m spacing"
+  },
+  {
+    "objectID": "talk/index.html#shortest-paths-for-a-planned-expedition",
+    "href": "talk/index.html#shortest-paths-for-a-planned-expedition",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Shortest paths for a planned expedition",
+    "text": "Shortest paths for a planned expedition"
+  },
+  {
+    "objectID": "talk/index.html#reduced-to-a-minimum-spanning-tree",
+    "href": "talk/index.html#reduced-to-a-minimum-spanning-tree",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Reduced to a minimum spanning tree",
+    "text": "Reduced to a minimum spanning tree"
+  },
+  {
+    "objectID": "talk/index.html#section-7",
+    "href": "talk/index.html#section-7",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "",
+    "text": "Terrain differentiated fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nManuscript almost finished\nFor more: + On this project: dosull.github.io/antarctica + About me at Geospatial Stuff: dosull.github.io"
+  },
+  {
+    "objectID": "talk/index.html#conclusion-1",
+    "href": "talk/index.html#conclusion-1",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Conclusion",
+    "text": "Conclusion\nTerrain differentiated fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nManuscript almost finished\nFor more: + On this project: dosull.github.io/antarctica + About me at Geospatial Stuff: dosull.github.io"
+  },
+  {
+    "objectID": "talk/index.html#conclusions",
+    "href": "talk/index.html#conclusions",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Conclusions",
+    "text": "Conclusions\nTerrain differentiated fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nA manuscript almost finished\n \nFor more\n\nOn this project: dosull.github.io/antarctica\nAbout Geospatial Stuff: dosull.github.io"
+  },
+  {
+    "objectID": "talk/index.html#for-more",
+    "href": "talk/index.html#for-more",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "For more",
+    "text": "For more\n\nOn this project: dosull.github.io/antarctica\nAbout Geospatial Stuff: dosull.github.io"
+  },
+  {
+    "objectID": "talk/index.html#conclusions-1",
+    "href": "talk/index.html#conclusions-1",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Conclusions",
+    "text": "Conclusions\nTerrain differentiated fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nA manuscript almost finished\n \nFor more\n\nOn this project: dosull.github.io/antarctica\nAbout Geospatial Stuff: dosull.github.io"
   }
 ]
