@@ -37,7 +37,11 @@ Image: Miers Valley, from [commons.wikimedia.org](https://commons.wikimedia.org/
 # Study area and data {.smaller background-image="background-image.png" background-opacity="0.65"}
 
 ##
-![](fig-study-area-1.png){fig-align="center"}
+![](fig-study-area-1.png){width="80%" fig-align="center"}
+
+![](north-arrows.png){.absolute top=65 left=177 width="200" .fragment .fade-in-then-out}
+
+![](fig-study-area-1.png){.absolute top=0 left=0 width="80%" fig-align="center" .fragment}
 
 ## GPS data
 ::: {.columns}
