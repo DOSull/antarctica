@@ -2,7 +2,7 @@
 title: "Modelling potential environmental impacts of science activity in Antarctica"
 title-slide-attributes:
     data-background-image: background-image.png
-    data-background-opacity: "0.5"
+    data-background-opacity: "0.65"
 author: 
   - name: David O'Sullivan
     affiliations: 
@@ -13,8 +13,7 @@ author:
       - name: Bioeconomy Science Institute
 format:
   revealjs:
-    theme: black
-    css: custom.scss
+    theme: [black, custom.scss]
     transition: none
     navigation-mode: vertical
     fragment-in-url: true
@@ -25,21 +24,22 @@ format:
 ---
 
 
-## Overview {.smaller}
-### [Study area](#study-area-1)
-### [GPS data](#gps-data-1)
-### [Building a hiking network](#building-a-hiking-network-1)
-### [Results](#results-1)
+## Overview {.smaller background-image="miers-valley.jpg"}
+### [Study area and data](#study-area-and-data-1)
+### [Hiking networks](#hiking-networks-1)
+### [Some outputs](#some-outputs-1)
 ### [Conclusions](#conclusions-1)
 
-# Study area {.smaller background-image="background-image.png" background-opacity="0.5"}
+::: aside
+Image: Miers Valley, from [commons.wikimedia.org](https://commons.wikimedia.org/wiki/File:Miers_Valley_CKL.jpg)
+:::
+
+# Study area and data {.smaller background-image="background-image.png" background-opacity="0.65"}
 
 ##
 ![](fig-study-area-1.png)
 
-# GPS data {.smaller background-image="background-image.png" background-opacity="0.5"}
-
-##
+## GPS data
 ::: {.columns}
 ::: {.column width=35%}
 ![](gps-device-picture.jpg)
@@ -63,13 +63,11 @@ Scientists turned devices on when leaving base camp in the morning and off on re
 
 
 
-# Hiking networks {.smaller background-image="background-image.png" background-opacity="0.5"}
+# Hiking networks {.smaller background-image="background-image.png" background-opacity="0.65"}
 
 ## Building a hiking network
-
-Start with a regular lattice across the study area
-
-Many topologies could be used
+### Start with regular lattice across study area
+### Many topologies could be used
 
 ```{r}
 library(sf)
@@ -151,13 +149,11 @@ wrap_plots(ggplots, nrow = 1) & theme(
 )
 ```
 
-We went with hexagonal at ~100m spacing
+### We went with hexagonal at ~100m spacing
 
-## Up $\neq$ down {background-image="klondike.jpg" background-opacity="50%"}
-
-Slope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges
-
-Then apply a *hiking function* to estimate traversal times
+## Up $\neq$ down {background-image="klondike.jpg" background-opacity="0.65"}
+### Slope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges
+### Then apply a *hiking function* to estimate traversal times
 
 ::: aside
 [People heading uphill in the Klondike gold rush 1897](https://www.nps.gov/klgo/learn/goldrush.htm) National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831
@@ -176,52 +172,42 @@ Then apply a *hiking function* to estimate traversal times
 ![](fig-models-by-cover-compared-1.png)
 
 ## Completing and applying the network
+### Assign edges *estimated traversal times* based on slope, the hiking function, and land cover (moraine or rock)
+### Make the nodes and edges into a _directed graph_
+### Then use various _graph algorithms_ to find, e.g., everywhere-to-everywhere shortest paths
 
-Assign edges *estimated traversal times* based on slope, the hiking function, and land cover (moraine or rock)
-
-Make the nodes and edges into a _directed graph_
-
-Then use various _graph algorithms_ to find, e.g., everywhere-to-everywhere shortest paths
-
-# Some outputs {.smaller background-image="background-image.png" background-opacity="0.5"}
+# Some outputs {.smaller background-image="background-image.png" background-opacity="0.65"}
 
 ##
 ![](fig-hiking-network-example-1.png)
 
 ## Betweenness centrality
-After some exploration, we settled on _betweenness centrality_ as a graph metric that might be useful
+### After some exploration, we landed on _betweenness centrality_ as a useful metric
+### Counts how often each node appears on shortest paths between every other pair of nodes
+&nbsp;
 
-This measure counts how many times each node appears on the shortest paths between every other pair of nodes
-
-An indicator of the relative likelihood of each location being visited
+### &rarr; Indicator of relative likelihood of locations being visited
 
 ## 
 
 ![](fig-betweenness-map-1.png)
 
 ## Radius-limited betweenness
-Restrict betweenness centrality to nodes no more than some time apart
-
-This is _much_ faster to calculate (yay!)
-
-Also... it looks like it has more value
-
-It (perhaps) is relevant to how people navigate in such environments
+### Restrict betweenness centrality to nodes no more than some cost (i.e., _time_) apart
+### _Much_ faster to calculate
+### Also... it may have more value: perhaps relevant to how people navigate in such environments
 
 ##
 
 ![](fig-radius-limited-betweenness-1.png)
 
 ## Planning a path network?
-
-One way to minimise impact might be to plan paths
-
-This is _experimental_ at this stage
-
-Based on a _minimum spanning tree_ approximation to an _arborescence_
+### A way to reduce impact might be to plan paths
+### _Experimental_ at this stage
+### Based on a _minimum spanning tree_ approximation to an _arborescence_
 
 ::: aside
-A minimum spanning tree is subgraph with minimum total cost that reaches all the nodes in a network. An arborescence is the equivalent in a directed graph.
+A minimum spanning tree is a subgraph with minimum total cost that reaches all the nodes in a network. An arborescence is the equivalent in a directed graph.
 :::
 
 ##
@@ -234,19 +220,20 @@ A minimum spanning tree is subgraph with minimum total cost that reaches all the
 
 ---
 
-## Conclusions
-Terrain-differentiated data-fitted hiking functions are a novelty
-
-Potential wider application of radius-limited betweenness centrality?
-
-A manuscript almost finished
+## [Conclusions]{style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"} {background-image="beacon-valley.jpg" style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"}
+### Terrain-differentiated data-fitted hiking functions are a novelty
+### Potential wider application of radius-limited betweenness centrality?
 
 &nbsp;
 
 #### For more
-* On this project: [dosull.github.io/antarctica](https://dosull.github.io/antarctica)
+* On this project: [[dosull.github.io/antarctica](https://dosull.github.io/antarctica)]{style="background-color:rgba(102,0,0,0.65);"}
 
-* About Geospatial Stuff: [dosull.github.io](https://dosull.github.io)
+* About ![](logo.png){style="vertical-align:middle;width:60px"} [Geospatial Stuff: [dosull.github.io](https://dosull.github.io)]{style="background-color:rgba(102,0,0,0.65);"}
+
+::: aside
+Image: Beacon Valley, from [reddit.com/rHumanForScale](https://www.reddit.com/r/HumanForScale/comments/by9q7f/beacon_valley_antarctica/)
+:::
 
 # {background-image="background-image.png"}
 [Questions?]{style="font-size:200px;color:black;opacity:25%;text-align:center;"}
