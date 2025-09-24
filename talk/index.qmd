@@ -223,10 +223,7 @@ A minimum spanning tree is a subgraph with minimum total cost that reaches all t
 ## [Conclusions]{style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"} {background-image="beacon-valley.jpg" style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"}
 ### Terrain-differentiated data-fitted hiking functions are a novelty
 ### Potential wider application of radius-limited betweenness centrality?
-
-&nbsp;
-
-#### For more
+### _For more_
 * On this project: [[dosull.github.io/antarctica](https://dosull.github.io/antarctica)]{style="background-color:rgba(102,0,0,0.65);"}
 
 * About ![](logo.png){style="vertical-align:middle;width:60px"} [Geospatial Stuff: [dosull.github.io](https://dosull.github.io)]{style="background-color:rgba(102,0,0,0.65);"}
