@@ -20,7 +20,7 @@ format:
     slide-number: false
     logo: logo.png
     footer: "Palmerston North Regional GIS Forum, September 2025"
-    self-contained: true
+    self-contained: false
 ---
 
 
@@ -153,7 +153,7 @@ wrap_plots(ggplots, nrow = 1) & theme(
 
 ## Up $\neq$ down {background-image="klondike.jpg" background-opacity="0.65"}
 ### Slope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges
-### Then apply a *hiking function* to estimate traversal times
+### Then use a *hiking function* to estimate traversal times
 
 ::: aside
 [People heading uphill in the Klondike gold rush 1897](https://www.nps.gov/klgo/learn/goldrush.htm) National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831
@@ -172,21 +172,27 @@ wrap_plots(ggplots, nrow = 1) & theme(
 ![](fig-models-by-cover-compared-1.png){fig-align="center"}
 
 ## Completing and applying the network
-### Assign edges *estimated traversal times* based on slope, the hiking function, and land cover (moraine or rock)
-### Make the nodes and edges into a _directed graph_
-### Then use various _graph algorithms_ to find, e.g., everywhere-to-everywhere shortest paths
+### Estimate edge *traversal times* based on slope, hiking function, and land cover (moraine or rock)
+### Make nodes and edges into a _directed graph_
+### Use various _graph algorithms_ to find, e.g., everywhere-to-everywhere shortest paths
 
 # Some outputs {.smaller background-image="background-image.png" background-opacity="0.65"}
 
 ##
-![](fig-hiking-network-example-1.png){fig-align="center"}
+![](hiking-network-example.png){fig-align="center"}
+
+##
+![](single-source-shortest-paths.png){fig-align="center"}
+
+##
+![](single-source-shortest-paths-2.png){fig-align="center"}
 
 ## Betweenness centrality
 ### After some exploration, we landed on _betweenness centrality_ as a useful metric
-### Counts how often each node appears on shortest paths between every other pair of nodes
+### Counts how often each node appears on shortest paths between every other pair of nodes {.fragment}
 &nbsp;
 
-### &rarr; Indicator of relative likelihood of locations being visited
+### &rarr; Indicator of relative likelihood of locations being visited {.fragment}
 
 ## 
 
@@ -222,26 +228,24 @@ A minimum spanning tree is a subgraph with minimum total cost that reaches all t
 
 ![](fig-approx-minimum-arborescence-1.png){fig-align="center"}
 
----
+# Conclusions {.smaller background-image="beacon-valley.jpg"}
 
-## [Conclusions]{style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"} {background-image="beacon-valley.jpg" style="text-shadow:0px 0px 8px rgba(102,0,0,0.5);"}
+[Image: Beacon Valley, from [reddit.com/rHumanForScale](https://www.reddit.com/r/HumanForScale/comments/by9q7f/beacon_valley_antarctica/)]{.aside .position bottom=0 left=0}
 
-::: {style="background-color:rgba(102,0,0,0.25);"}
-### Terrain-differentiated data-fitted hiking functions are a novelty
-### Potential wider application of radius-limited betweenness centrality?
-### Manuscript in preparation
-### Start a conversation with Antarctic scientists about planning
-:::
+## {background-image="beacon-valley.jpg"}
 
-::: aside
-Image: Beacon Valley, from [reddit.com/rHumanForScale](https://www.reddit.com/r/HumanForScale/comments/by9q7f/beacon_valley_antarctica/)
+::: {style="text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);background-color:rgba(102,0,0,0.1);backdrop-filter:blur(2px);padding:5px;border-radius:5px;"}
+### Hiking network concept is implicit in hiking functions but a new terrain representation
+### Terrain-differentiated GPS data-fitted hiking functions are novel {.fragment}
+### Potential wider application of radius-limited betweenness centrality {.fragment}
+### Next up: start a conversation with Antarctic scientists about planning {.fragment}
 :::
 
 # {background-image="background-image.png"}
 
 ### Questions? {style="font-size:220px;color:black;opacity:25%;text-align:center;font-weight:700;"}
 
-::: {style="background-color:rgba(102,0,0,0.2);"}
+::: {style="background-color:rgba(102,0,0,0.1);backdrop-filter:blur(2px);padding:5px;border-radius:5px;"}
 <h2 style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);">For more</h2>
 ### On this project [dosull.github.io/antarctica](https://dosull.github.io/antarctica) {style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);"}
 ### On ![](logo.png){style="vertical-align:middle;width:60px;text-align:center;"} Geospatial Stuff [dosull.github.io](https://dosull.github.io) {style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);"}

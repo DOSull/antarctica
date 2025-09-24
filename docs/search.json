@@ -848,7 +848,7 @@
     "href": "talk/index.html#up-neq-down",
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "Up \\(\\neq\\) down",
-    "text": "Up \\(\\neq\\) down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen apply a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
+    "text": "Up \\(\\neq\\) down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen use a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
   },
   {
     "objectID": "talk/index.html#building-a-hiking-network",
@@ -953,7 +953,7 @@
     "href": "talk/index.html#completing-and-applying-the-network",
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "Completing and applying the network",
-    "text": "Completing and applying the network\nAssign edges estimated traversal times based on slope, the hiking function, and land cover (moraine or rock)\nMake the nodes and edges into a directed graph\nThen use various graph algorithms to find, e.g., everywhere-to-everywhere shortest paths"
+    "text": "Completing and applying the network\nEstimate edge traversal times based on slope, hiking function, and land cover (moraine or rock)\nMake nodes and edges into a directed graph\nUse various graph algorithms to find, e.g., everywhere-to-everywhere shortest paths"
   },
   {
     "objectID": "talk/index.html#section-1",
@@ -1009,7 +1009,7 @@
     "href": "talk/index.html#section-7",
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "",
-    "text": "Terrain differentiated fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nManuscript almost finished\nFor more: + On this project: dosull.github.io/antarctica + About me at Geospatial Stuff: dosull.github.io"
+    "text": "Hiking network concept is implied by hiking functions but new\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext: start a conversation with Antarctic scientists about planning"
   },
   {
     "objectID": "talk/index.html#conclusion-1",
@@ -1037,7 +1037,7 @@
     "href": "talk/index.html#conclusions-1",
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "Conclusions",
-    "text": "Conclusions\n\nTerrain-differentiated data-fitted hiking functions are a novelty\nPotential wider application of radius-limited betweenness centrality?\nManuscript in preparation\nStart a conversation with Antarctic scientists about planning\n\n\n\nImage: Beacon Valley, from reddit.com/rHumanForScale"
+    "text": "Conclusions\nHiking network concept is implied by hiking functions but new\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext: start a conversation with Antarctic scientists about planning\n\n\nImage: Beacon Valley, from reddit.com/rHumanForScale"
   },
   {
     "objectID": "talk/index.html#gps-data-1",
@@ -1059,5 +1059,19 @@
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "",
     "text": "…"
+  },
+  {
+    "objectID": "talk/index.html#section-8",
+    "href": "talk/index.html#section-8",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "",
+    "text": "Hiking network concept is implied by hiking functions but new\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext: start a conversation with Antarctic scientists about planning"
+  },
+  {
+    "objectID": "talk/index.html#section-9",
+    "href": "talk/index.html#section-9",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "",
+    "text": "Hiking network concept is implicit in hiking functions but a new terrain representation\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext up: start a conversation with Antarctic scientists about planning"
   }
 ]
