@@ -6,7 +6,7 @@
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="../site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-d166b450ba5a8e9f7a0ab969bf6592c1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.6.39">
 
   <meta name="author" content="David O’Sullivan">
@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="../site_libs/revealjs/dist/theme/quarto-acdb876233a1d01ae1ab1c4ade192a7c.css">
+  <link rel="stylesheet" href="../site_libs/revealjs/dist/theme/quarto-933a6a0d9c044a36ef5dac6fce9d9e63.css">
   <link href="../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="../site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="../site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -123,7 +123,7 @@
     }
   </style>
 </head>
-<body class="quarto-dark">
+<body class="quarto-light">
   <div class="reveal">
     <div class="slides">
 
@@ -155,10 +155,12 @@ Fraser Morgan
 </section>
 <section id="overview" class="slide level2 smaller" data-background-image="miers-valley.jpg">
 <h2>Overview</h2>
+<div style="background-color:rgba(0,51,102,0.5);border-radius:5px;padding:5px;width:42%;text-shadow:0px 0px 3px white;">
 <h3 id="study-area-and-data"><a href="#/study-area-and-data-1">Study area and data</a></h3>
 <h3 id="hiking-networks"><a href="#/hiking-networks-1">Hiking networks</a></h3>
 <h3 id="some-outputs"><a href="#/some-outputs-1">Some outputs</a></h3>
 <h3 id="conclusions"><a href="#/conclusions-1">Conclusions</a></h3>
+</div>
 
 <aside><div>
 <p>Image: Miers Valley, from <a href="https://commons.wikimedia.org/wiki/File:Miers_Valley_CKL.jpg">commons.wikimedia.org</a></p>
@@ -172,10 +174,10 @@ Fraser Morgan
 <h2></h2>
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="fig-study-area-1.png" class="quarto-figure quarto-figure-center" style="width:80.0%"></p>
+<p><img data-src="fig-study-area-2.png" class="quarto-figure quarto-figure-center" style="width:80.0%"></p>
 </figure>
 </div>
-<p><img data-src="north-arrows.png" class="absolute fragment fade-in-then-out" style="top: 65px; left: 177px; width: 200px; "></p>
+<p><img data-src="north-arrows.png" class="absolute fragment fade-in-then-out" style="top: 65px; left: 179px; width: 200px; "></p>
 <div class="quarto-figure quarto-figure-center">
 <figure>
 <p><img data-src="fig-study-area-1.png" class="absolute fragment quarto-figure quarto-figure-center" style="top: 0px; left: 0px; width: 80%; "></p>
@@ -212,9 +214,9 @@ Fraser Morgan
 <h3 id="start-with-regular-lattice-across-study-area">Start with regular lattice across study area</h3>
 <h3 id="many-topologies-could-be-used">Many topologies could be used</h3>
 
-<img data-src="index_files/figure-revealjs/unnamed-chunk-2-1.png" width="768" class="r-stretch"><h3 id="we-went-with-hexagonal-at-107m-spacing">We went with hexagonal at ~107m spacing</h3>
+<img data-src="index-2_files/figure-revealjs/unnamed-chunk-2-1.png" width="768" class="r-stretch"><h3 id="we-went-with-hexagonal-at-107m-spacing">We went with hexagonal at ~107m spacing</h3>
 </section>
-<section id="up-down" class="slide level2" data-background-image="klondike.jpg" data-background-opacity="0.65">
+<section id="up-down" class="slide level2" data-background-image="klondike.jpg" data-background-opacity="0.5">
 <h2>Up ≠ down</h2>
 <h3 id="slope-is-critical-to-movement-so-attach-heights-to-nodes-and-calculate-slope-in-each-direction-along-lattice-edges">Slope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges</h3>
 <h3 id="then-use-a-hiking-function-to-estimate-traversal-times">Then use a <em>hiking function</em> to estimate traversal times</h3>
@@ -271,7 +273,7 @@ Fraser Morgan
 <section id="section-4" class="slide level2">
 <h2></h2>
 
-<img data-src="fig-betweenness-map-1.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<img data-src="fig-betweenness-map-2.png" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="radius-limited-betweenness" class="slide level2">
 <h2>Radius-limited betweenness</h2>
 <h3 id="restrict-betweenness-centrality-to-nodes-no-more-than-some-cost-i.e.-time-apart">Restrict betweenness centrality to nodes no more than some cost (i.e., <em>time</em>) apart</h3>
@@ -281,7 +283,7 @@ Fraser Morgan
 <section id="section-5" class="slide level2">
 <h2></h2>
 
-<img data-src="fig-radius-limited-betweenness-1.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<img data-src="fig-radius-limited-betweenness-2.png" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-6" class="slide level2">
 <h2></h2>
 
@@ -298,23 +300,23 @@ Fraser Morgan
 <section id="section-7" class="slide level2">
 <h2></h2>
 
-<img data-src="fig-betweenness-limited-sites-1.png" class="quarto-figure quarto-figure-center r-stretch"></section>
+<img data-src="fig-betweenness-limited-sites-2.png" class="quarto-figure quarto-figure-center r-stretch"></section>
 <section id="section-8" class="slide level2">
 <h2></h2>
 
-<img data-src="fig-approx-minimum-arborescence-1.png" class="quarto-figure quarto-figure-center r-stretch"></section></section>
+<img data-src="fig-approx-minimum-arborescence-2.png" class="quarto-figure quarto-figure-center r-stretch"></section></section>
 <section>
-<section id="conclusions-1" class="title-slide slide level1 smaller center" data-background-image="beacon-valley.jpg">
-<h1>Conclusions</h1>
+<section id="conclusions-1" class="title-slide slide level1 smaller center" data-background-image="beacon-valley.jpg" style="color:white;">
+<h1><span style="color:white;">Conclusions</span></h1>
 <p><span class="position column-margin margin-aside" data-bottom="0" data-left="0">Image: Beacon Valley, from <a href="https://www.reddit.com/r/HumanForScale/comments/by9q7f/beacon_valley_antarctica/">reddit.com/rHumanForScale</a></span></p>
 </section>
 <section id="section-9" class="slide level2" data-background-image="beacon-valley.jpg">
 <h2></h2>
-<div style="text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);background-color:rgba(102,0,0,0.1);backdrop-filter:blur(2px);padding:5px;border-radius:5px;">
-<h3 id="hiking-network-concept-is-implicit-in-hiking-functions-but-a-new-terrain-representation">Hiking network concept is implicit in hiking functions but a new terrain representation</h3>
-<h3 class="fragment" id="terrain-differentiated-gps-data-fitted-hiking-functions-are-novel">Terrain-differentiated GPS data-fitted hiking functions are novel</h3>
-<h3 class="fragment" id="potential-wider-application-of-radius-limited-betweenness-centrality">Potential wider application of radius-limited betweenness centrality</h3>
-<h3 class="fragment" id="next-up-start-a-conversation-with-antarctic-scientists-about-planning">Next up: start a conversation with Antarctic scientists about planning</h3>
+<div style="text-shadow:0px 0px 8px rgba(102,0,0,0.5),0px 0px 4px rgba(102,0,0,0.65);background-color:rgba(102,0,0,0.1);backdrop-filter:blur(2px);padding:5px;border-radius:5px;">
+<h3 style="color:white;" id="hiking-network-concept-is-implicit-in-hiking-functions-but-a-new-terrain-representation">Hiking network concept is implicit in hiking functions but a new terrain representation</h3>
+<h3 class="fragment" style="color:white;" id="terrain-differentiated-gps-data-fitted-hiking-functions-are-novel">Terrain-differentiated GPS data-fitted hiking functions are novel</h3>
+<h3 class="fragment" style="color:white;" id="potential-wider-application-of-radius-limited-betweenness-centrality">Potential wider application of radius-limited betweenness centrality</h3>
+<h3 class="fragment" style="color:white;" id="next-up-start-a-conversation-with-antarctic-scientists-about-planning">Next up: start a conversation with Antarctic scientists about planning</h3>
 </div>
 </section></section>
 <section>
@@ -324,11 +326,11 @@ Fraser Morgan
 </section>
 <h3 style="font-size:220px;color:black;opacity:25%;text-align:center;font-weight:700;" id="questions">Questions?</h3>
 <div style="background-color:rgba(102,0,0,0.1);backdrop-filter:blur(2px);padding:5px;border-radius:5px;">
-<h2 style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);">
+<h2 style="text-align:center;">
 For more
 </h2>
-<h3 style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);" id="on-this-project-dosull.github.ioantarctica">On this project <a href="https://dosull.github.io/antarctica">dosull.github.io/antarctica</a></h3>
-<h3 style="text-align:center;text-shadow:0px 0px 8px rgba(102,0,0,0.35),0px 0px 4px rgba(102,0,0,0.65);" id="on-geospatial-stuff-dosull.github.io">On <img data-src="logo.png" style="vertical-align:middle;width:60px;text-align:center;"> Geospatial Stuff <a href="https://dosull.github.io">dosull.github.io</a></h3>
+<h3 style="text-align:center;" id="on-this-project-dosull.github.ioantarctica">On this project <a href="https://dosull.github.io/antarctica">dosull.github.io/antarctica</a></h3>
+<h3 style="text-align:center;" id="on-geospatial-stuff-dosull.github.io">On <img data-src="logo.png" style="vertical-align:middle;width:60px;text-align:center;"> Geospatial Stuff <a href="https://dosull.github.io">dosull.github.io</a></h3>
 </div>
 
 </section>

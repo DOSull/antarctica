@@ -1073,5 +1073,124 @@
     "title": "Modelling potential environmental impacts of science activity in Antarctica",
     "section": "",
     "text": "Hiking network concept is implicit in hiking functions but a new terrain representation\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext up: start a conversation with Antarctic scientists about planning"
+  },
+  {
+    "objectID": "talk/index-2.html#overview",
+    "href": "talk/index-2.html#overview",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Overview",
+    "text": "Overview\n\nStudy area and data\nHiking networks\nSome outputs\nConclusions\n\n\n\nImage: Miers Valley, from commons.wikimedia.org"
+  },
+  {
+    "objectID": "talk/index-2.html#gps-data",
+    "href": "talk/index-2.html#gps-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "GPS data",
+    "text": "GPS data\n\n\n\n\nCollected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018\n40+ hour battery life and simple use\nLocation recorded every 30 seconds\nScientists turned devices on when leaving base camp in the morning and off on return at the end of the day"
+  },
+  {
+    "objectID": "talk/index-2.html#the-dry-valleys",
+    "href": "talk/index-2.html#the-dry-valleys",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "The Dry Valleys",
+    "text": "The Dry Valleys\nBing maps aerial imagery"
+  },
+  {
+    "objectID": "talk/index-2.html#and-on-the-ground",
+    "href": "talk/index-2.html#and-on-the-ground",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "And on the ground",
+    "text": "And on the ground\nYup! There’s streetview imagery"
+  },
+  {
+    "objectID": "talk/index-2.html#building-a-hiking-network",
+    "href": "talk/index-2.html#building-a-hiking-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Building a hiking network",
+    "text": "Building a hiking network\nStart with regular lattice across study area\nMany topologies could be used\n\nWe went with hexagonal at ~107m spacing"
+  },
+  {
+    "objectID": "talk/index-2.html#up-neq-down",
+    "href": "talk/index-2.html#up-neq-down",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Up &neq; down",
+    "text": "Up &neq; down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen use a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
+  },
+  {
+    "objectID": "talk/index-2.html#hiking-functions",
+    "href": "talk/index-2.html#hiking-functions",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Hiking functions",
+    "text": "Hiking functions"
+  },
+  {
+    "objectID": "talk/index-2.html#smoothing-gps-data",
+    "href": "talk/index-2.html#smoothing-gps-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Smoothing GPS data",
+    "text": "Smoothing GPS data"
+  },
+  {
+    "objectID": "talk/index-2.html#curve-fitting-to-cleaned-data",
+    "href": "talk/index-2.html#curve-fitting-to-cleaned-data",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Curve fitting to cleaned data",
+    "text": "Curve fitting to cleaned data"
+  },
+  {
+    "objectID": "talk/index-2.html#terrain-dependent-vs-combined",
+    "href": "talk/index-2.html#terrain-dependent-vs-combined",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Terrain-dependent vs combined",
+    "text": "Terrain-dependent vs combined"
+  },
+  {
+    "objectID": "talk/index-2.html#completing-and-applying-the-network",
+    "href": "talk/index-2.html#completing-and-applying-the-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Completing and applying the network",
+    "text": "Completing and applying the network\nEstimate edge traversal times based on slope, hiking function, and land cover (moraine or rock)\nMake nodes and edges into a directed graph\nUse various graph algorithms to find, e.g., everywhere-to-everywhere shortest paths"
+  },
+  {
+    "objectID": "talk/index-2.html#betweenness-centrality",
+    "href": "talk/index-2.html#betweenness-centrality",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Betweenness centrality",
+    "text": "Betweenness centrality\nAfter some exploration, we landed on betweenness centrality as a useful metric\nCounts how often each node appears on shortest paths between every other pair of nodes\n \n→ Indicator of relative likelihood of locations being visited"
+  },
+  {
+    "objectID": "talk/index-2.html#radius-limited-betweenness",
+    "href": "talk/index-2.html#radius-limited-betweenness",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Radius-limited betweenness",
+    "text": "Radius-limited betweenness\nRestrict betweenness centrality to nodes no more than some cost (i.e., time) apart\nMuch faster to calculate\nAlso… it may have more value: perhaps relevant to how people navigate in such environments"
+  },
+  {
+    "objectID": "talk/index-2.html#planning-a-path-network",
+    "href": "talk/index-2.html#planning-a-path-network",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Planning a path network?",
+    "text": "Planning a path network?\nA way to reduce impact might be to plan paths\nExperimental at this stage\nBased on a minimum spanning tree approximation to an arborescence\n\n\nA minimum spanning tree is a subgraph with minimum total cost that reaches all the nodes in a network. An arborescence is the equivalent in a directed graph."
+  },
+  {
+    "objectID": "talk/index-2.html#section-9",
+    "href": "talk/index-2.html#section-9",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "",
+    "text": "Hiking network concept is implicit in hiking functions but a new terrain representation\nTerrain-differentiated GPS data-fitted hiking functions are novel\nPotential wider application of radius-limited betweenness centrality\nNext up: start a conversation with Antarctic scientists about planning"
+  },
+  {
+    "objectID": "talk/index-2.html#up-down",
+    "href": "talk/index-2.html#up-down",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Up ≠ down",
+    "text": "Up ≠ down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen use a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
+  },
+  {
+    "objectID": "talk/index.html#up-down",
+    "href": "talk/index.html#up-down",
+    "title": "Modelling potential environmental impacts of science activity in Antarctica",
+    "section": "Up ≠ down",
+    "text": "Up ≠ down\nSlope is critical to movement, so attach heights to nodes and calculate slope in each direction along lattice edges\nThen use a hiking function to estimate traversal times\n\n\nPeople heading uphill in the Klondike gold rush 1897 National Park Service, Klondike Gold Rush National Historical Park, Candy Waugaman Collection, KLGO Library SS-126-8831"
   }
 ]
