@@ -1046,9 +1046,6 @@ ggplot() +
 ```
 
 ## Discussion {#sec-discussion}
-To cover:
-
-+ Figure of the largest study site?
 + Limitations of the method:
   + Data concerns, esp. opportunistic nature of the GPS data
   + Would higher resolution network be useful?
