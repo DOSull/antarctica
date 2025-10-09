@@ -112,26 +112,23 @@ However, there are small, scientifically significant areas where substantial, re
 Globally unique ice-free areas within Antarctica, such as the McMurdo Dry Valleys, are of particular scientific interest and so a significant amount of activity occurs in this specially managed area.
 Human activity in Antarctica is highly dependent on the infrastructure that supports people to survive in this environment. 
 Outside of a reduced period of activity caused by COVID-19, human activity on the continent continues to grow [@Tejedo2024] and so the actual, and future potential impact of these activities continues to grow. 
-With the McMurdo Dry Valleys being very close to the largest research base on the continent, McMurdo Station, the pressures on this unique environment from human activity are increasing. 
-Understanding the scope and implications of human activity in key parts of Antarctica is critical to supporting the environmental management of the continent.
+The McMurdo Dry Valleys are close to the largest research base on the continent, McMurdo Station, and the pressures on this unique environment from human activity are increasing. 
+Understanding the scope and implications of human activity in key parts of Antarctica is critical to supporting environmental management of the continent.
 
-The history of understanding the role and impacts of human activity in Antarctica begins with the sixth Antarctic Treaty Consultative Meeting (ATCM) in 1970. 
-A recommendation in the final report of this meeting was for member countries to encourage more research on how human activity has impact on Antarctica and its ecosystems [@ATCM1970 Recommendation VI-4].
-By the mid-1980s, it was recognised that scientific activity, particularly the logistics required to support that activity, required additional scrutiny, but also that scientific activity could pose a greater threat to Antarctica’s ecosystems than tourism [@benninghoff1985man]. 
+The history of understanding the role and impacts of human activity in Antarctica starts with the Sixth Antarctic Treaty Consultative Meeting (ATCM) in 1970. 
+A recommendation of the final report of this meeting was for member countries to encourage research on how human activity impacts Antarctica and its ecosystems [@ATCM1970 Recommendation VI-4].
+By the mid-1980s, it was recognised that scientific activity, particularly the logistics required to support that activity, required additional scrutiny, and also that scientific activity could pose a greater threat to Antarctica’s ecosystems than tourism [@Benninghoff1985]. 
 At this point, the need for more understanding and the ability to forecast the environmental impact of human activity was recognised [@ATCM1985 Paragraph 46]. 
 
-Moving into the mid-1990’s, the multi-disciplinary scope of large programmes of research like the McMurdo Dry Valleys Long Term Ecological Research (MCM LTER) programme, increased the number of researchers in the field but also supported more research into the history of human activity in the Dry Valleys [@priscu2016environmental]. 
+Moving into the mid-1990s, the multi-disciplinary scope of large programmes of research such as the McMurdo Dry Valleys Long Term Ecological Research (MCM LTER) programme, increased the number of researchers in the field while also supporting more research into the history of human activity in the Dry Valleys [@Priscu2016].
+With the establishment of the Committee for Environmental Protection (CEP) in 1998, human activities (including science activities) were to be monitored, but attention moved away from the understanding and scope of the activities, and became more focused on potential resulting impacts of those activities. 
+For example, the current 5-year Work Plan for the CEP (REF), has several items associated with human activities but these are focused on managing the impact of human activities rather than quantifying the current level of activity, or forecasting cumulative impacts of the activity. 
 
-With the introduction of the Committee for Environmental Protection (CEP) in 1998, human activities (including science activities) were monitored, but moved away from the understanding and scope of the activities, but more focused on the potential resulting impacts of the activity. 
-For example, the current 5-year Work Plan for the CEP (REF), has several items associated with human activities but are focused on managing the impact of human activities rather than quantifying the current level of activity, or forecasting the cumulative impacts of the activity. 
+More recent research has focused either on a continental-scale picture of human activity [@Leihy2020], or detailed mapping of the infrastructural footprint and impacts that the numerous Antarctic stations have on the continent [@Brooks2018,@Brooks2019].
+These approaches tackle the challenge of understanding human activity from contrasting spatial perspectives. 
+The present research aims to complement these two techniques, by using high resolution mapping of human activity in the dry valleys to extrapolate how scientists might navigate around these landscapes.
 
-More recent research has focused either on a continental-scale picture of human activity (Leihy et al), or detailed mapping of the infrastructural footprint and impacts that the numerous Antarctic stations have on the continent (Brooks et al x 2 Papers). 
-These approaches approach the challenge of understanding human activity from contrasting spatial perspectives. 
-This research aims to complement these two techniques using high resolution mapping of human activity in the dry valleys to extrapolate the way in which scientists use the landscape to move around.
-
-**FRASER MATERIAL ENDS**
-
-Overview of sections ahead.
+In the next section we outline our approach and discuss related work. We then describe data sources, both general environmental and topographic, and the detailed GPS data from which our findings are derived. Procedures for deriving hiking functions and applying them to build hiking networks as representations of the dry valleys landscapes are explained, followed by examples of analyses possible using this approach, particularly the application of measures of graph betweenness centrality as proxies for potential impact. We also outline by which these methods might be used to plan for reduced impact from scientific expeditions to these environments. The paper concludes with a discussion of our findings, prospects for further work, and some general conclusions.
 
 ## Our approach and related work
 We chose to explore the question of where human impacts are likely to be strongest using an approach closely related to work on patterns of human movement in archaeology [@Verhagen2019] where likely and potential movement paths of humans across landscapes have been used to infer the settlement structure and human geography of large-scale landscapes. 
@@ -149,11 +146,11 @@ We consider previous work on hiking functions and directed graphs in more detail
 
 ### Hiking functions {#sec-hiking-functions}
 @Prisner2023 provide an overview of a variety of functions that have been used to model how hiking times and speeds vary with terrain slope. 
-They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010; @Deutscher2011]. 
+They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010; @DeutscherundOstereichischerAlpenverein2011]. 
 These functions estimate the time taken to travel 1km, referred to as *pace*, based on slope expressed as *rise over run*, that is change in elevation divided by horizontal distance. 
 They are all piecewise functions with sharp changes in estimated pace at specific slopes.
 
-Alongside these hiking pace functions @Prisner2023 also present hiking speed functions (generally referred to as simply *hiking functions*) from Tobler [-@Tobler1993 generally considered the first hiking function] and more recent, related but more firmly empirically grounded alternatives offered by @Marquez-Perez2017, @Irmischer2018, and @Campbell2019. 
+Alongside these hiking pace functions @Prisner2023 also present hiking speed functions (generally referred to as simply *hiking functions*) from Tobler [-@Tobler1993 generally considered the first hiking function] and more recent, related but more firmly empirically grounded alternatives offered by @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
 Another hiking function not discussed by @Prisner2023 is presented by @Rees2004. 
 These hiking functions are all continuous in the slope of the terrain so that $v=f(\theta)$, where $v$ is the speed, and $\theta$ is the slope. 
 They can all be parameterised to control the maximum speed attainable, the slope at which maximum speed is attained (expected to be a shallow downhill slope), and the rate at which speed falls off with increasing slope.
@@ -163,15 +160,15 @@ The functional forms of some hiking functions are shown in @tbl-hiking-function-
 | Description | Equation                                 | Examples                        |
 |:-           |:-                                        |:-----                           |
 | Exponential | $ae^{b\left|\theta-c\right|}$            | @Tobler1993, @Marquez-Perez2017 |
-| Gaussian    | $ae^{-b(\theta-c)^2}$                    | @Irmischer2018, @Campbell2019   |
-| Lorentz     | $\frac{a}{\left[b+d(\theta-c)^2\right]}$ | @Campbell2019                   |
+| Gaussian    | $ae^{-b(\theta-c)^2}$                    | @Irmischer2018, @Campbell2019a   |
+| Lorentz     | $\frac{a}{\left[b+d(\theta-c)^2\right]}$ | @Campbell2019a                   |
 | Quadratic   | $a+b\theta+c\theta^2$                    | @Rees2004                       |
 
 : Functional forms of hiking functions {#tbl-hiking-function-equations .striped}
 
 ```{r}
 #| label: fig-hiking-functions
-#| fig-cap: "Example hiking functional forms: Exponential [@Tobler1993], Gaussian [@Irmischer2018], Lorentz [@Campbell2019], and Quadratic [@Rees2004]."
+#| fig-cap: "Example hiking functional forms: Exponential [@Tobler1993], Gaussian [@Irmischer2018], Lorentz [@Campbell2019a], and Quadratic [@Rees2004]."
 
 theme_set(theme_minimal())
 theme_update(
@@ -211,7 +208,7 @@ ggplot(results) +
 ```
 
 The parameterisations of the functions in @fig-hiking-functions have been chosen for illustrative purposes only, although the parameter values for the exponential function shown are such that $v=6e^{-3.5\left|\theta+0.05\right|}$ as suggested in @Tobler1993. 
-These parameters give *Tobler's hiking function* but, as has been noted elsewhere, [see @Herzog2010; @Campbell2019], are based on a poorly specified fit to secondary data on hiking speeds found in Imhof [-@Imhof1950, pp. 217-220]. 
+These parameters give *Tobler's hiking function* but, as has been noted elsewhere, [see @Herzog2010; @Campbell2019a], are based on a poorly specified fit to secondary data on hiking speeds found in Imhof [-@Imhof1950, pp. 217-220]. 
 Nevertheless, these parameter values are widely applied in the literature.
 
 All these hiking functional forms are somewhat *ad hoc*. 
@@ -219,7 +216,7 @@ They exhibit desirable, expected properties: a peak speed at a slope near zero, 
 However, there is no theoretical basis for the specific functional forms listed in @tbl-hiking-function-equations. 
 More principled approaches might be developed based on the literature on the physiology of human movement [see, e.g., @Minetti2002]. 
 In general, approaches based on minimising energy use yield similar results to empirical speed-slope functions, although it is worth noting that they more reliably generate zig-zag or 'switchback' movement behaviour on steep slopes [@Llobera2007]. 
-However, these are hard to implement, and we have adopted empirically-derived and locally-specific hiking functions following @Marquez-Perez2017, @Irmischer2018, and @Campbell2019. 
+However, these are hard to implement, and we have adopted empirically-derived and locally-specific hiking functions following @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
 This choice is based on available data and the goals of our study, where the relative cost of different potential routes in the landscape is more important than exact prediction of routes. 
 In practice, almost any function with the peaked form of those shown in @fig-hiking-functions is suited to our requirements.
 
@@ -333,7 +330,7 @@ Nevertheless, more circular base isochrone shapes are to be preferred, all other
 A further complication when a lattice includes edges of varying length as in the Queen's and Knight's move lattices, is bias in the estimation of slopes leading to lower estimated movement costs for longer edges. 
 This is because longer edges (e.g., the knight's moves) may 'jump' across intervening segments of varying slope, smoothing them to a single slope estimate.
 Such smoothing will usually result in shorter edge traversal times along such edges than those that would accumulate along intervening sections of varying slope. 
-This problem is discussed in a slightly different context by Campbell et al. [-@Campbell2019 pp. 96-98].
+This problem is discussed in a slightly different context by Campbell et al. [-@Campbell2019a pp. 96-98].
 
 Any choice of graph structure is necessarily a compromise, and estimates of movement rates are always an approximation [@Goodchild2020]. 
 We consider the differing edge lengths introduced by all the square lattices other than the Rook's case to be problematic, and favour the hexagonal lattice structure over the simple square lattice because a base hexagonal isochrone is preferable to a diamond shape.
@@ -422,28 +419,26 @@ g34 <- ggplot() +
 ```
 
 ### GPS data from an expedition
-**FRASER MATERIAL STARTS**
-
-GPS data showing how scientists moved around the McMurdo Dry Valleys was collected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018. 
-These units were selected because of their long battery life (40+ hours), chipset sensitivity, and simple design and use.
-
-Each unit was set to record a location every 30 seconds. 
-Scientists turned on the devices when leaving the base camp in the morning and turned them off when returning at the end of the day. 
-The units were attached to the top of a backpack when leaving the camp to ensure the units had bread access to the GPS signal. 
-
-Participants were sourced through existing networks of scientists supported by the New Zealand Antarctic Programme who were heading to Antarctica for research purposes. 
-All participants were asked if they wish to wear a GPS recorder. 
-The study was entirely voluntary. Over the two primary field events, 40 people used the devices. 
-Social Ethics approval was received by the Manaaki Whenua Landcare Research Social Ethics committee (SE 1617/05).
+GPS data recording how scientists moved around the McMurdo Dry Valleys was collected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018 (see @fig-gps-device).
+These units were selected for their long battery life (40+ hours), chipset sensitivity, and simple design and use.
 
 ![The Qstarz Q1100P GPS Tracking Recorders used to record the movement of research staff while in the McMurdo Dry Valleys.](gps-device-picture.jpg){#fig-gps-device fig-width="60.88mm"}
 
-![30 second locations recorded by ~14 researchers within a single research event within the Miers Valley. The image shows the basecamp, locations of research equipment and/or activities, as well as walking tracks that were taken to access areas further afield.](sample-gps-data.png){#fig-sample-gps-data fig-width="81.28mm"}
+Each unit was set to record a location every 30 seconds. 
+Scientists turned on the devices when leaving base camp in the morning and turned them off when returning at the end of the day.
+The units were attached to the top of a backpack to ensure units had good access to the GPS signal. 
 
-**FRASER MATERIAL ENDS**
+Participants were sourced through existing networks of scientists supported by the New Zealand Antarctic Programme who were going to Antarctica for research purposes. 
+All participants were asked if they wished to carry a GPS recorder. 
+The study was entirely voluntary. 
+Over the duration of the two primary field events, 40 people used the devices. 
+Social Ethics approval was granted by the Manaaki Whenua Landcare Research Social Ethics committee (SE 1617/05).
 
-GPS data were processed to make them better suited for use in the estimation of hiking functions.
+Sample output of the GPS data is shown in in @fig-sample-gps-data.
 
+![30 second locations recorded by ~14 researchers during a single research trip to the Miers Valley. The image shows the basecamp, locations of research equipment and/or activities, movement among these locations and to access areas further afield.](gps-traces-figure.png){#fig-sample-gps-data fig-width="100mm"}
+
+It was necessary to process GPS data to make them better suited for use in the estimation of hiking functions. 
 The first processing step was to confirm the plausibility of the data, particularly the device-generated speed distance between fixes, and elevations associated with fixes.
 The challenges of post-processing GPS data are well documented and relate to issues with GPS drift which can lead to estimated non-zero movement speeds as a result of noise in the signal.
 The raw GPS data included distance since last fix, speed, and elevation estimates and it was determined in all cases that the device generated results for these measurements were likely to be more reliable than post-processing the raw latitude-longitude fixes to calculate the values.
@@ -528,7 +523,7 @@ g41 + g42 +
 
 ## Methods and results
 ### Hiking functions {#sec-hiking-function-estimation}
-We fit three alternative functional forms to the cleaned GPS data: exponential [@Tobler1993], Gaussian [following @Irmischer2018], and Lorentz [following @Campbell2019] using the Levenburg-Marquardt algorithm [@More1978] as provided by the `nlsLM` function in the `minpack.lm` R package [@Elzhov2022].
+We fit three alternative functional forms to the cleaned GPS data: exponential [@Tobler1993], Gaussian [following @Irmischer2018], and Lorentz [following @Campbell2019a] using the Levenburg-Marquardt algorithm [@More1978] as provided by the `nlsLM` function in the `minpack.lm` R package [@Elzhov2022].
 The raw data and fitted curves are shown in @fig-comparison-of-hiking-functions.
 
 ```{r}
@@ -664,8 +659,8 @@ $$ {#eq-estimated-hiking-functions}
 where the different maximum speeds (in kilometres per hour) and slopes of maximum speed are apparent.
 
 ### Landscapes as graphs
-We developed R code [@RCoreTeam2024] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
-Graphs are manipulated as `igraph` package [@csardi2006igraph; @Csardi2024] graph objects for further analysis.
+We developed R code [@RCoreTeam2025] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
+Graphs are manipulated as `igraph` package [@Csardi2006a; @Csardi2024] graph objects for further analysis.
 An important decision in constructing graphs is choice of the spacing of the hexagonal lattice, and also of the underlying DEM from which graph vertex elevations are derived.
 Given the extent of the study sites (see @fig-study-area(d)) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
 The hexagon centre to centre spacing of this lattice is given by 
@@ -1058,7 +1053,7 @@ To cover:
   + Data concerns, esp. opportunistic nature of the GPS data
   + Would higher resolution network be useful?
   + Possible limitations of a regularly spaced lattice: extend to a lattice based on e.g., TIN?
-  + Reliance of shortest paths as a guide to behaviour
+  + Reliance on shortest paths as a guide to behaviour
   + Some minor issues regarding the difference between directed and undirected graphs
 + Relevance of radius limits on betweenness: the implicit model of movement in this approach (short horizons, no existing paths, 'keep going for half an hour in this general direction...')
 + Question of embedding paths, i.e., locking in more damage to some parts of the landscape vs others

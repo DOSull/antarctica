@@ -166,7 +166,7 @@
             </if>
           </choose>
         </if>
-        <else-if type="webpage">
+        <else-if type="webpage report" match="any">
           <date variable="issued" delimiter=" ">
             <date-part name="month"/>
             <date-part name="day"/>
