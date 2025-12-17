@@ -105,8 +105,6 @@ From these we estimate using a variety of graph metrics—particularly betweenne
 We also suggest a simple approach to planning science expeditions that might allow for reduced impacts in these environments.
 
 ## Introduction
-**FRASER MATERIAL STARTS**
-
 Antarctica is often considered a vast, desolate continent devoid of human activity.
 However, there are small, scientifically significant areas where substantial, regular human activity occurs.
 Globally unique ice-free areas within Antarctica, such as the McMurdo Dry Valleys, are of particular scientific interest and so a significant amount of activity occurs in this specially managed area.
@@ -124,9 +122,9 @@ Moving into the mid-1990s, the multi-disciplinary scope of large programmes of r
 With the establishment of the Committee for Environmental Protection (CEP) in 1998, human activities (including science activities) were to be monitored, but attention moved away from the understanding and scope of the activities, and became more focused on potential resulting impacts of those activities. 
 For example, the current 5-year Work Plan for the CEP (REF), has several items associated with human activities but these are focused on managing the impact of human activities rather than quantifying the current level of activity, or forecasting cumulative impacts of the activity. 
 
-More recent research has focused either on a continental-scale picture of human activity [@Leihy2020], or detailed mapping of the infrastructural footprint and impacts that the numerous Antarctic stations have on the continent [@Brooks2018,@Brooks2019].
+More recent research has focused either on a continental-scale picture of human activity [@Leihy2020], or detailed mapping of the infrastructural footprint and impacts that the numerous Antarctic stations have on the continent [@Brooks2018; @Brooks2019].
 These approaches tackle the challenge of understanding human activity from contrasting spatial perspectives. 
-The present research aims to complement these two techniques, by using high resolution mapping of human activity in the dry valleys to extrapolate how scientists might navigate around these landscapes.
+The present research aims to complement these two techniques, by using high resolution mapping of human activity in the dry valleys to extrapolate how scientists navigate in these landscapes, or could potentially navigate in these landscapes.
 
 In the next section we outline our approach and discuss related work. We then describe data sources, both general environmental and topographic, and the detailed GPS data from which our findings are derived. Procedures for deriving hiking functions and applying them to build hiking networks as representations of the dry valleys landscapes are explained, followed by examples of analyses possible using this approach, particularly the application of measures of graph betweenness centrality as proxies for potential impact. We also outline by which these methods might be used to plan for reduced impact from scientific expeditions to these environments. The paper concludes with a discussion of our findings, prospects for further work, and some general conclusions.
 
@@ -1047,13 +1045,13 @@ ggplot() +
 
 ## Discussion {#sec-discussion}
 + Limitations of the method:
-  + Data concerns, esp. opportunistic nature of the GPS data
-  + Would higher resolution network be useful?
+  + Data concerns, esp. given improvements in  GPS data collection since 2016/18
+  + Would higher resolution network be useful? (we think probably not)
   + Possible limitations of a regularly spaced lattice: extend to a lattice based on e.g., TIN?
   + Reliance on shortest paths as a guide to behaviour
-  + Some minor issues regarding the difference between directed and undirected graphs
+  + Some minor issues regarding the difference between directed and undirected graphs (to check using `networkx`)
 + Relevance of radius limits on betweenness: the implicit model of movement in this approach (short horizons, no existing paths, 'keep going for half an hour in this general direction...')
-+ Question of embedding paths, i.e., locking in more damage to some parts of the landscape vs others
++ Question of embedding paths, i.e., locking in more damage to some parts of the landscape vs others (this leads to the question in conclusion re method for less damaging plans)
 
 ## Conclusions {#sec-conclusions}
 To cover:
