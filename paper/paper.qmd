@@ -23,6 +23,7 @@ format:
     number-sections: true
     fig-format: png
     fig-dpi: 600
+    citeproc: true
   html:
     toc: true
     # code-fold: true
@@ -99,7 +100,7 @@ source(str_glue("{home}/paper/raster-to-graph-functions-paper.R"))
 
 ### Abstract {.unnumbered}
 
-We use GPS data collected on a science expedition in Antarctica to estimate hiking functions for the speed at which humans traverse terrain differentiated by slope and by ground cover (moraines and rock). 
+We use GPS data collected on science expeditions in Antarctica to estimate hiking functions for the speed at which humans traverse terrain differentiated by slope and by ground cover (moraines and rock). 
 We use the estimated hiking functions to build weighted directed graphs as a representation of specific environments in Antarctica. 
 From these we estimate using a variety of graph metrics—particularly betweenness centrality—the relative potential for human environmental impacts arising from scientific activities in those environments. 
 We also suggest a simple approach to planning science expeditions that might allow for reduced impacts in these environments.
@@ -107,26 +108,30 @@ We also suggest a simple approach to planning science expeditions that might all
 ## Introduction
 Antarctica is often considered a vast, desolate continent devoid of human activity.
 However, there are small, scientifically significant areas where substantial, regular human activity occurs.
-Globally unique ice-free areas within Antarctica, such as the McMurdo Dry Valleys, are of particular scientific interest and so a significant amount of activity occurs in this specially managed area.
-Human activity in Antarctica is highly dependent on the infrastructure that supports people to survive in this environment. 
+Globally unique ice-free areas in Antarctica, such as the McMurdo Dry Valleys, are of particular scientific interest and a significant amount of activity occurs in this specially managed area.
 Outside of a reduced period of activity caused by COVID-19, human activity on the continent continues to grow [@Tejedo2024] and so the actual, and future potential impact of these activities continues to grow. 
+Human activity in Antarctica is dependent on the infrastructure that supports people to survive in this environment. 
 The McMurdo Dry Valleys are close to the largest research base on the continent, McMurdo Station, and the pressures on this unique environment from human activity are increasing. 
-Understanding the scope and implications of human activity in key parts of Antarctica is critical to supporting environmental management of the continent.
+Understanding the scope of human activity in key parts of Antarctica is critical to supporting environmental management of the continent.
 
-The history of understanding the role and impacts of human activity in Antarctica starts with the Sixth Antarctic Treaty Consultative Meeting (ATCM) in 1970. 
+The history of understanding the role and impacts of human activity in Antarctica begins with the Sixth Antarctic Treaty Consultative Meeting (ATCM) in 1970. 
 A recommendation of the final report of this meeting was for member countries to encourage research on how human activity impacts Antarctica and its ecosystems [@ATCM1970 Recommendation VI-4].
 By the mid-1980s, it was recognised that scientific activity, particularly the logistics required to support that activity, required additional scrutiny, and also that scientific activity could pose a greater threat to Antarctica’s ecosystems than tourism [@Benninghoff1985]. 
 At this point, the need for more understanding and the ability to forecast the environmental impact of human activity was recognised [@ATCM1985 Paragraph 46]. 
 
-Moving into the mid-1990s, the multi-disciplinary scope of large programmes of research such as the McMurdo Dry Valleys Long Term Ecological Research (MCM LTER) programme, increased the number of researchers in the field while also supporting more research into the history of human activity in the Dry Valleys [@Priscu2016].
+Moving into the mid-1990s, the multi-disciplinary scope of large programmes of research such as the McMurdo Dry Valleys Long Term Ecological Research programme, increased the number of researchers in the field while also supporting more research into the history of human activity in the Dry Valleys [@Priscu2016].
 With the establishment of the Committee for Environmental Protection (CEP) in 1998, human activities (including science activities) were to be monitored, but attention moved away from the understanding and scope of the activities, and became more focused on potential resulting impacts of those activities. 
 For example, the current 5-year Work Plan for the CEP (REF), has several items associated with human activities but these are focused on managing the impact of human activities rather than quantifying the current level of activity, or forecasting cumulative impacts of the activity. 
 
 More recent research has focused either on a continental-scale picture of human activity [@Leihy2020], or detailed mapping of the infrastructural footprint and impacts that the numerous Antarctic stations have on the continent [@Brooks2018; @Brooks2019].
 These approaches tackle the challenge of understanding human activity from contrasting spatial perspectives. 
-The present research aims to complement these two techniques, by using high resolution mapping of human activity in the dry valleys to extrapolate how scientists navigate in these landscapes, or could potentially navigate in these landscapes.
+The present research aims to complement these efforts, by using high resolution mapping of human activity in the dry valleys to extrapolate how scientists navigate in these landscapes, or could potentially navigate in these landscapes.
 
-In the next section we outline our approach and discuss related work. We then describe data sources, both general environmental and topographic, and the detailed GPS data from which our findings are derived. Procedures for deriving hiking functions and applying them to build hiking networks as representations of the dry valleys landscapes are explained, followed by examples of analyses possible using this approach, particularly the application of measures of graph betweenness centrality as proxies for potential impact. We also outline by which these methods might be used to plan for reduced impact from scientific expeditions to these environments. The paper concludes with a discussion of our findings, prospects for further work, and some general conclusions.
+In the next section we outline our approach and discuss related work. 
+We then describe data sources, both general environmental and topographic, and the detailed GPS data from which our findings are derived. 
+Procedures for deriving hiking functions and applying them to build hiking networks as representations of the dry valleys landscapes are explained, followed by examples of analyses possible using this approach, particularly the application of measures of graph betweenness centrality as proxies for potential impact. 
+We also outline how these methods might be used to plan for reduced impact from scientific expeditions to these environments. 
+The paper concludes with a discussion of our findings, prospects for further work, and some general conclusions.
 
 ## Our approach and related work
 We chose to explore the question of where human impacts are likely to be strongest using an approach closely related to work on patterns of human movement in archaeology [@Verhagen2019] where likely and potential movement paths of humans across landscapes have been used to infer the settlement structure and human geography of large-scale landscapes. 
@@ -136,7 +141,7 @@ These approaches rely on hiking functions that relate speed of movement across a
 
 Hiking functions must be applied in some context where locations across a landscape are connected to one another. 
 Because hiking functions are asymmetric, with estimated speed of movement up slopes different than estimated speeds down the same slope, landscape must be represented in a way that allows for this asymmetry. 
-We therefore represent terrain in our landscapes as directed graphs (or network) of connections between locations regularly distributed in planimetric space across the landscape of interest. 
+We therefore represent terrain in our landscapes as directed graphs (i.e., networks) of connections between locations regularly distributed in planimetric space across the landscape of interest. 
 Because the graphs are directed the costs associated with movement between two locations can be different depending on the direction of movement. 
 Additionally, we associate with locations (i.e., vertices in the graph) the ground cover at the location, which also affects the speed at which it can be traversed. 
 Because the ground cover in the Antarctic environments under study can be broadly categorised into only two types, moraine and rock, we use the ground cover of a location to switch between two estimated hiking functions, rather than the more widely used approach of penalising movement on different ground covers by applying cost factors. 
@@ -145,12 +150,12 @@ We consider previous work on hiking functions and directed graphs in more detail
 ### Hiking functions {#sec-hiking-functions}
 @Prisner2023 provide an overview of a variety of functions that have been used to model how hiking times and speeds vary with terrain slope. 
 They consider longstanding rules of thumb [@Naismith1892], and later modifications thereof [@Langmuir1984], along with more recent such guidance from the Swiss and German Alpine Clubs [@Winkler2010; @DeutscherundOstereichischerAlpenverein2011]. 
-These functions estimate the time taken to travel 1km, referred to as *pace*, based on slope expressed as *rise over run*, that is change in elevation divided by horizontal distance. 
-They are all piecewise functions with sharp changes in estimated pace at specific slopes.
+These functions estimate the time taken to travel 1km, referred to as *pace*, based on slope, expressed as *rise over run*, that is change in elevation divided by horizontal distance. 
+These are all piecewise functions with sharp changes in estimated pace at specific slopes.
 
-Alongside these hiking pace functions @Prisner2023 also present hiking speed functions (generally referred to as simply *hiking functions*) from Tobler [-@Tobler1993 generally considered the first hiking function] and more recent, related but more firmly empirically grounded alternatives offered by @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
+Alongside hiking pace functions @Prisner2023 also present hiking speed functions (usually referred to as simply *hiking functions*) from @Tobler1993 [generally considered the first hiking function] and more recent, more empirically grounded alternatives offered by @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
 Another hiking function not discussed by @Prisner2023 is presented by @Rees2004. 
-These hiking functions are all continuous in the slope of the terrain so that $v=f(\theta)$, where $v$ is the speed, and $\theta$ is the slope. 
+These functions are all continuous in the slope of the terrain so that $v=f(\theta)$, where $v$ is the speed, and $\theta$ is the slope. 
 They can all be parameterised to control the maximum speed attainable, the slope at which maximum speed is attained (expected to be a shallow downhill slope), and the rate at which speed falls off with increasing slope.
 
 The functional forms of some hiking functions are shown in @tbl-hiking-function-equations and graphed in @fig-hiking-functions.
@@ -162,7 +167,7 @@ The functional forms of some hiking functions are shown in @tbl-hiking-function-
 | Lorentz     | $\frac{a}{\left[b+d(\theta-c)^2\right]}$ | @Campbell2019a                   |
 | Quadratic   | $a+b\theta+c\theta^2$                    | @Rees2004                       |
 
-: Functional forms of hiking functions {#tbl-hiking-function-equations .striped}
+: Alternative functional forms of hiking functions {#tbl-hiking-function-equations .striped}
 
 ```{r}
 #| label: fig-hiking-functions
@@ -201,20 +206,20 @@ ggplot(results) +
   scale_x_continuous(limits = c(-0.5, 0.5), expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, 6.25), expand = c(0, 0)) +
   geom_vline(aes(xintercept = -0.05), lwd = 0.35, linetype = "dotted") +
-  annotate("label", x = -0.055, y = 0.5, label = "Peak speed slope (exponential)", 
+  annotate("label", x = -0.055, y = 0.3, label = "Peak speed slope (exponential)", 
            angle = 90, hjust = 0, vjust = 0.6, label.size = 0)
 ```
 
 The parameterisations of the functions in @fig-hiking-functions have been chosen for illustrative purposes only, although the parameter values for the exponential function shown are such that $v=6e^{-3.5\left|\theta+0.05\right|}$ as suggested in @Tobler1993. 
-These parameters give *Tobler's hiking function* but, as has been noted elsewhere, [see @Herzog2010; @Campbell2019a], are based on a poorly specified fit to secondary data on hiking speeds found in Imhof [-@Imhof1950, pp. 217-220]. 
+These parameters give *Tobler's hiking function* but, as has been noted elsewhere [see @Herzog2010;@Campbell2019a], are based on a poorly specified fit to secondary data on hiking speeds found in @Imhof1950 [pp. 217-220].
 Nevertheless, these parameter values are widely applied in the literature.
 
 All these hiking functional forms are somewhat *ad hoc*. 
 They exhibit desirable, expected properties: a peak speed at a slope near zero, which we expect to be slightly negative (i.e., downhill), and continuously falling speeds as the slope deviates from the slope of peak speed. 
 However, there is no theoretical basis for the specific functional forms listed in @tbl-hiking-function-equations. 
-More principled approaches might be developed based on the literature on the physiology of human movement [see, e.g., @Minetti2002]. 
+More principled approaches might be developed based on literature on the physiology of human movement [see, e.g., @Minetti2002]. 
 In general, approaches based on minimising energy use yield similar results to empirical speed-slope functions, although it is worth noting that they more reliably generate zig-zag or 'switchback' movement behaviour on steep slopes [@Llobera2007]. 
-However, these are hard to implement, and we have adopted empirically-derived and locally-specific hiking functions following @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
+However, these are challenging to implement, and we have adopted empirically-derived and locally-specific hiking functions following @Marquez-Perez2017, @Irmischer2018, and @Campbell2019a. 
 This choice is based on available data and the goals of our study, where the relative cost of different potential routes in the landscape is more important than exact prediction of routes. 
 In practice, almost any function with the peaked form of those shown in @fig-hiking-functions is suited to our requirements.
 
@@ -245,16 +250,16 @@ $$
 \theta_{ij}=\frac{z_j-z_i}{\sqrt{(x_i-x_j)^2+(y_i-y_j)^2}}
 $$ {#eq-slope-of-edge}
 
-The obvious way to derive such a graph from spatial data is to assign each cell in a raster digital elevation model (DEM) to a graph∏ vertex, so that graph vertices are arranged in a regular square grid or lattice, and this approach has been widely adopted. **CITATIONS NEEDED HERE** 
+The obvious way to derive such a graph from spatial data is to assign each cell in a raster digital elevation model (DEM) to a graph vertex, so that vertices are arranged in a regular square grid or lattice.
 However, this still requires a decision about how to define graph edges, which can be thought of in terms of _allowed moves_ between vertices. 
-Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's moves&mdash;are shown in @fig-lattice-adjacencies. 
+Three possibilities on a square lattice&mdash;Rook's, Queen's, and Knight's moves&mdash;are shown in @fig-lattice-adjacencies [see @Pingel2010].
 Another option shown in the figure is to lay out a regular hexagonal grid of vertex locations and link each vertex to its six nearest neighbours.
 
 ```{r}
 #| label: fig-lattice-adjacencies
 #| fig-cap: Possible graph lattices.
-#| fig-width: 5
-#| fig-height: 5
+#| fig-width: 4
+#| fig-height: 4.2
 
 theme_set(theme_void()) 
 theme_update(
@@ -274,14 +279,15 @@ get_lattice <- function(dist, pts) {
 get_graph_plot <- function(G, main, crs = 2193) {
   return(ggplot() +
     geom_sf(data = G |> 
-              get_graph_as_line_layer(crs = 2193)) +
-    geom_sf(data = G |> 
-              vertex_attr() |> as.data.frame() |> st_as_sf(coords = 1:2, crs = crs), 
-            size = 8, fill = "white", colour = "black", shape = 21, lwd = 1) +
+              get_graph_as_line_layer(crs = 2193), lwd = 0.4,
+              colour = "black") +
+    geom_sf(data = G |> vertex_attr() |> as.data.frame() |> 
+            st_as_sf(coords = 1:2, crs = crs), size = 8, fill = "lightgrey", 
+            colour = "white", shape = 21, lwd = 1) +
     coord_sf(xlim = c(-270, 270) + 1e6, 
              ylim = c(-270, 270) + 1e6, expand = FALSE) +
     ggtitle(main) +
-    theme(title = element_text(size = 8)))
+    theme(title = element_text(size = 6)))
 }
 
 grid_pts <- expand_grid(x = -20:20 * 100 + 1e6, y = -20:20 * 100 + 1e6) |>
@@ -304,7 +310,7 @@ graphs <- mapply(
   get_lattice,
   list(101, 150, 225, 110),
   list(grid_pts, grid_pts, grid_pts, hex_grid_pts))
-names(graphs) <- list("Rook's move", "Queen's move", "Knight's move", "Hex")
+names(graphs) <- list("Rook's move", "Queen's move", "Knight's move", "Hexagonal")
 
 ggplots <- list()
 for (n in names(graphs)) {
@@ -314,7 +320,7 @@ for (n in names(graphs)) {
 wrap_plots(ggplots, nrow = 2)
 ```
 
-The advantage of a square lattice is that is east to derive vertex elevations assuming a DEM at the desired lattice spacing is available. 
+The advantage of a square lattice is that it is easy to derive vertex elevations assuming a DEM at the desired lattice spacing is available. 
 A hexagonal lattice on the other hand usually requires that elevation values be interpolated from a DEM to the lattice locations.
 
 Both square and hexagonal lattices lead to geometric artifacts when the allowed moves are used to determine contours of equal travel time or *isochrones* from an origin point on a flat surface with uniform movement speeds. 
@@ -323,7 +329,7 @@ In general isochrones will be polygons with as many sides as the number of neigh
 While the 16-gons of the Knight's move lattice are likely to be close enough to circular for many purposes, the resulting graph is denser than the alternatives. 
 @Etherington2012 suggests that by combining results from randomly generated planar graphs such geometric artifacts can be removed, but this substantially increases the computational requirements. 
 Another computationally intensive approach might draw on methods for estimating geodesics on complex triangular meshes [@Martinez2005].
-Because these geometric effects of graph structure are masked when we introduce varying movement speeds due to the slope of each edge, we do not consider these more complex approaches necessary in our application. 
+Because the geometric effects of graph structure are masked when we introduce varying movement speeds due to the slope of each edge, we do not consider these more complex approaches necessary in our application. 
 Nevertheless, more circular base isochrone shapes are to be preferred, all other things equal.
 
 A further complication when a lattice includes edges of varying length as in the Queen's and Knight's move lattices, is bias in the estimation of slopes leading to lower estimated movement costs for longer edges. 
@@ -348,7 +354,7 @@ When an edge connects locations of two different land cover types the estimated 
 Geospatial data for Antarctica were obtained from sources referenced in @Cox2023, @Cox2023a, and @Felden2023.
 The study area was defined to be the Skelton and Dry Valleys basins, as defined by the NASA Making Earth System Data Records for Use in Research Environments (MEaSUREs) project [@Mouginot2017] and shown in @fig-study-area&#8202;(a).
 The Skelton basin was included because while the expedition GPS data was ostensibly collected in the McMurdo Dry Valleys, it actually extends into that basin as shown in @fig-study-area&#8202;(b).
-Elevation data from the Reference Elevation Model of Antarctica (REMA) project @Howat2022, and geology from GeoMAP @Cox2023 are shown in @fig-study-area&#8202;(c).
+Elevation data from the Reference Elevation Model of Antarctica (REMA) project [@Howat2022], and geology from GeoMAP [@Cox2023] are shown in @fig-study-area&#8202;(c).
 The five largest areas of contiguous non-ice surface geology across the study area shown in @fig-study-area&#8202;(d) were chosen to be the specific sites for more detailed exploration using the methods set out in this paper.
 These range in size from around 320 to 2600 square kilometres.
 
@@ -421,11 +427,11 @@ g34 <- ggplot() +
                   theme = theme(plot.title = element_text(size = 9)))
 ```
 
-### GPS data from an expedition
+### GPS data from expeditions
 GPS data recording how scientists moved around the McMurdo Dry Valleys was collected using QStarz Q1100P GPS Tracking Recorders between 2016 and 2018 (see @fig-gps-device).
 These units were selected for their long battery life (40+ hours), chipset sensitivity, and simple design and use.
 
-![The Qstarz Q1100P GPS Tracking Recorders used to record the movement of research staff while in the McMurdo Dry Valleys.](gps-device-picture.jpg){#fig-gps-device fig-width="60.88mm"}
+![The Qstarz Q1100P GPS Tracking Recorders used to record the movement of research scientists in the McMurdo Dry Valleys.](gps-device-picture.jpg){#fig-gps-device fig-width="60.88mm"}
 
 Each unit was set to record a location every 30 seconds. 
 Scientists turned on the devices when leaving base camp in the morning and turned them off when returning at the end of the day.
@@ -434,25 +440,26 @@ The units were attached to the top of a backpack to ensure units had good access
 Participants were sourced through existing networks of scientists supported by the New Zealand Antarctic Programme who were going to Antarctica for research purposes. 
 All participants were asked if they wished to carry a GPS recorder. 
 The study was entirely voluntary. 
-Over the duration of the two primary field events, 40 people used the devices. 
+Over the duration of the two primary field events, 40 people used the devices, yielding over 200 person days of activity data. 
 Social Ethics approval was granted by the Manaaki Whenua Landcare Research Social Ethics committee (SE 1617/05).
 
 Sample output of the GPS data is shown in in @fig-sample-gps-data.
 
 ![30 second locations recorded by ~14 researchers during a single research trip to the Miers Valley. The image shows the basecamp, locations of research equipment and/or activities, movement among these locations and to access areas further afield.](gps-traces-figure.png){#fig-sample-gps-data fig-width="100mm"}
 
-It was necessary to process GPS data to make them better suited for use in the estimation of hiking functions. 
-The first processing step was to confirm the plausibility of the data, particularly the device-generated speed distance between fixes, and elevations associated with fixes.
-The challenges of post-processing GPS data are well documented and relate to issues with GPS drift which can lead to estimated non-zero movement speeds as a result of noise in the signal.
-The raw GPS data included distance since last fix, speed, and elevation estimates and it was determined in all cases that the device generated results for these measurements were likely to be more reliable than post-processing the raw latitude-longitude fixes to calculate the values.
+It was necessary to process the GPS data to prepare it for use in the estimation of hiking functions. 
+The first processing step was to confirm the plausibility of the data, particularly the device-generated speeds, distances between fixes, and elevations associated with fixes.
+The challenges of post-processing GPS data are well documented [see e.g., @Ranacher2016] and relate to issues with GPS drift which can lead to estimated non-zero movement speeds as a result of noise in the signal.
+The raw GPS data included distance since last fix, speed, and elevation estimates and it was determined by inspection that in all cases that the device generated results for these measurements were likely to be more reliable than post-processing the raw latitude-longitude fixes to estimate these quantities.
 
 The second processing step was to remove fixes associated with faster movement on other modes of transport than walking.
 @Wood2023 cite a number of previous works that base detection of trip segments based on recorded speeds.
 This method was trivially applicable to our data to a limited degree as scientists arrive at the expedition base camp and occasionally also travel on helicopters on trips to more remote experimental sites. 
 
 The third, more challenging processing step was to deal with sequences of fixes associated with non-purposeful movement when scientists were in or around base camp, at rest stops, or at experimental sites. 
-Crude filters removed fixes with low recorded distances between fixes (less than 2.5 metres), high turn angles at the fix location (greater than 150&deg;), and fixes recorded on ice-covered terrain, but this didi not clean the data sufficiently for further analysis.
-An additional filtering step was to count fixes (across all scientists) in square grid cells and remove all fixes in grid cells with more than 50 fixes.
+Crude filters removed fixes with low recorded distances between fixes (less than 2.5 metres), high turn angles at the fix location (greater than 150&deg;), and fixes recorded on ice-covered terrain, but this did not clean the data sufficiently for further analysis.
+An additional filtering step was to count fixes (across all scientists) in hexagonal cells (the same cells used in construction of the landscape network) and remove all fixes in grid cells with more than 50 fixes.
+This removed heavily trafficked areas around base camp and experimental sites where much of the recorded movement was not indicative of achievable speeds when moving purposefully across the landscape.
 
 This left one persistent concern: an over-representation of consecutive fixes recorded at exactly the same elevation, resulting in many fixes with estimated slopes of exactly 0, and leading to a clearly evident dip in estimated movement speeds at 0 slope (@fig-gps-data&#8202;(a)). 
 It is likely that these fixes are associated with GPS device drift, so a it was decided to remove all fixes where estimated slope was exactly 0.
@@ -519,7 +526,9 @@ g42 <- ggplot(gps_geol_purposive) +
 
 ```{r}
 #| label: fig-gps-data
-#| fig-cap: "GPS data and crudely estimated hiking functions before and after filtering the to remove fixes associated with non-purposive movement: (a) Boxplots by slope of speed, with smoothed estimated hiking function showing a 'dip' due to over-representation of 0 slope fixes; and (b) After filtering the estimated hiking function no longer has a dip."
+#| fig-cap: "GPS data and crudely estimated hiking functions before and after filtering to remove fixes associated with non-purposive movement: (a) Boxplots by slope of speed, with smoothed estimated hiking function showing a 'dip' due to over-representation of 0 slope fixes; and (b) After filtering the estimated hiking function no longer has a dip."
+#| fig-width: 6
+#| fig-height: 4
 g41 + g42 + 
   plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")",
                   theme = theme(plot.title = element_text(size = 16)))
@@ -583,6 +592,8 @@ input_data <- bind_rows(inputs)
 ```{r}
 #| label: fig-comparison-of-hiking-functions
 #| fig-cap: Three possible hiking functions applied to GPS data split by land cover.
+#| fig-width: 6
+#| fig-height: 4
 ggplot() +
   geom_boxplot(data = gps_geol_purposive |> filter(cover != "Ice"),
                aes(x = slope_h_round, y = speed_km_h, group = slope_h_round),
@@ -638,6 +649,8 @@ Plotting both functions in the same graph makes clearer the difference in maximu
 ```{r}
 #| label: fig-models-by-cover-compared
 #| fig-cap: The hiking functions for All, Moraine and Rock ground covers compared, including 95% confidence intervals derived by Monte-Carlo simulation.
+#| fig-width: 6
+#| fig-height: 4
 ggplot() +
   geom_ribbon(data = predictions |> filter(cover == "All"), 
               aes(x = x, ymin = `2.5%`, ymax = `97.5%`), 
@@ -660,13 +673,13 @@ v_{\mathrm{rock}}    & = & 3.76\,\exp\left[{-\frac{(\theta+0.119)^2}{0.365}}\rig
 \end{array}
 $$ {#eq-estimated-hiking-functions}
 
-where the different maximum speeds (in kilometres per hour) and slopes of maximum speed are apparent.
+where the difference between moraine and rocky terrain in terms of maximum speeds 4.17 vs 3.76 km/hr, and slopes of maximum speed -0.0526 vs -0.119, are apparent.
 
 ### Landscapes as graphs
 We developed R code [@RCoreTeam2025] to build graphs (i.e. networks) with hexagonal lattice structure and estimated traversal times for graph edges derived from our hiking functions. 
 Graphs are manipulated as `igraph` package [@Csardi2006a; @Csardi2024] graph objects for further analysis.
 An important decision in constructing graphs is choice of the spacing of the hexagonal lattice, and also of the underlying DEM from which graph vertex elevations are derived.
-Given the extent of the study sites (see @fig-study-area&#8202;(d)) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells as appropriate.
+Given the extent of the study sites (see @fig-study-area&#8202;(d)) it was decided that a hexagonal lattice (see @fig-lattice-adjacencies) with hexagons equivalent in area to 100 metre square cells was appropriate.
 The hexagon centre to centre spacing of this lattice is given by 
 $$
 100\sqrt{\frac{2}{\sqrt{3}}}\approxeq 107.5\,\mathrm{metres}
@@ -683,7 +696,7 @@ A map of the fifth largest study area's hiking network is shown in @fig-hiking-n
 This network includes 30,697 vertices and 174,798 directed edges. 
 The largest of the five study sites (see @fig-study-area&#8202;(d)) results in a network containing almost a quarter of a million vertices and over 1.4 million directed edges.
 A hiking network can be used to explore many connectivity properties of the environment.
-For example, for a chosen origin point, a _shortest path tree_ can be derived showing the route (@fig-hiking-network-example&#8202;(c)). 
+For example, for a chosen origin point, a _shortest path tree_ can be derived showing all routes to ever other location (@fig-hiking-network-example&#8202;(c)). 
 
 ```{r}
 #| output: false
@@ -801,7 +814,7 @@ g74 <- ggplot() +
 
 ```{r}
 #| label: fig-hiking-network-example
-#| fig-cap: "A hiking network derived for the fifth largest study site shown in @fig-study-area&#8202;(d): (a) Map of a hiking network coloured by estimated traversal times of edges; (b) Red-outlined area zoomed in revealing edges removed from graph due to steep slopes; (c) Shortest path tree of a hiking network from the indicated origin; and (d) Red-outlined area zoomed in view of the shortest path tree."
+#| fig-cap: "A hiking network derived for the fifth largest study site centred on Beacon Valley in the Quartermain Mountains shown in @fig-study-area&#8202;(d): (a) Map of a hiking network coloured by estimated traversal times of edges; (b) Red-outlined area zoomed in revealing edges removed from graph due to steep slopes; (c) Shortest path tree of a hiking network from the indicated origin; and (d) Red-outlined area zoomed in view of the shortest path tree."
 
 (g71 + g72 + plot_layout(guides = "collect")) / (g73 + g74) + 
   plot_annotation(tag_levels = "a", tag_prefix = "(", tag_suffix = ")",
@@ -810,7 +823,7 @@ g74 <- ggplot() +
 
 ### Betweenness centrality
 The connectivity properties of a hiking graph can be described using a range of measures of graph structure and used to reveal the relative likelihood of different parts of a terrain being frequently traversed.
-The particular structural measure we focus on is _betweenness centrality_, which is explained below.
+The particular structural measure we focus on is _betweenness centrality_.
 
 In a graph $G=(V,E)$ a path $P$ is an ordered sequence of vertices, $P=\left(v_1,v_2,\ldots,v_n\right)$ such that each consecutive pair of vertices $v_i$ and $v_{i+1}$ is adjacent, i.e. connected by a directed edge $e_{i,j}$.
 The _length_ of a path is the number of edges it contains.
@@ -819,12 +832,12 @@ $$
 L(P)=\sum_{i=1}^{n-1} w_{i,i+1}
 $$ {#eq-path-length}
 
-The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldots,v_j\right)$ starting at$v_i$ and ending at $v_i$ passing through intervening vertices $\left(v_*\right)$ such that $L(P)$ is minimised.
+The _shortest path_ from $v_i$ to $v_j$ is the path $P=\left(v_i,\dots,v_*,\ldots,v_j\right)$ starting at $v_i$ and ending at $v_i$ passing through intervening vertices $\left(v_*\right)$ such that $L(P)$ is minimised.
 In a regular lattice such as our hiking networks there are many shortest paths of equal length if the weight associated with each edge is equal, as it would be if we based it solely on the length of the edge between each pair of vertices.
 When we consider edge traversal costs derived from the slope of each edge and a hiking function, then the shortest path will be unique, or one of only a small number of possibilities of equal total cost.
 
-Shortest paths are used to develop many measures of vertex centrality in graphs [@Freeman1978].
-One such measure of vertex centrality is _betweenness centrality_. 
+Shortest paths are used to develop many measures of vertex centrality in graphs [@Freeman1978; @Newman2018].
+One such measure is _betweenness centrality_. 
 The betweenness centrality of a vertex is the total number of times that vertex is on shortest paths between every other pair of vertices in the network.
 If we denote the number of shortest paths or _geodesics_ between two vertices $v_j$ and $v_k$ by $g_{jk}$, then each appearance of a vertex $v_i$ on the shortest path between those vertices only contributes $1/g_{jk}$ to the betweenness centrality of $v_i$.
 Formally, if we denote the number of times vertex $v_i$ appears on shortest paths between $v_j$ and $v_k$ by $g_{jk}(v_i)$, then its betweenness $b_i$ is given by
@@ -874,7 +887,7 @@ ggplot(G_sf) +
 ### Betweenness centrality limited by radius {#sec-radius-limited-betweenness}
 The `igraph` implementation of betweenness centrality provides an option to _radius limit_ betweenness calculations, meaning that only paths shorter than a specified radius (expressed in cost units, here of time) are considered in counting the appearance of vertices on shortest paths.
 This approach is particularly useful for large graphs where the time complexity of calculating radius limited betweenness scales more favourably than cited above, because the number of shortest paths that must be identified is greatly reduced.
-We informally confirmed the intuition that for a given radius limit the time take to compute betweenness scales approximately linearly with the number of vertices in the graph, since the number of shortest paths local to each vertex, and on which it might be found is similar.
+We informally confirmed the intuition that for a given radius limit the time taken to compute betweenness scales approximately linearly with the number of vertices in the graph, since the number of shortest paths local to each vertex, and on which it might be found is similar.
 
 Results for a series of radius limits are shown in @fig-radius-limited-betweenness.
 The results here are interesting.
@@ -897,6 +910,8 @@ for (i in seq_along(radii)) {
 ```{r}
 #| label: fig-radius-limited-betweenness
 #| fig-cap: "Vertex betweenness maps based on different radius limits. As in @fig-betweenness-map the visualization colouring is based on linear scaling of raw betweenness scores."
+#| fig-width: 8
+#| fig-height: 6
 betweenness_results_df <- betweenness_results |>
   bind_rows() |>
   mutate(radius = factor(radius, levels = str_glue("{radii * 60} mins")
@@ -907,7 +922,8 @@ ggplot(betweenness_results_df) +
   scale_fill_viridis_c(option = "A", direction = -1) +
   guides(fill = "none") +
   facet_wrap( ~ radius, ncol = 3) +
-  theme_void()
+  theme_void() + 
+  theme(panel.spacing = unit(1, "mm"))
 ```
 
 ### Planning reduced impact route networks
@@ -1002,7 +1018,7 @@ ggplot() +
 This approach assumes that all trips whether from base camp to experimental sites, or between different sites follow shortest paths between those two sites.
 A further analytical possibility is to use the hiking network to plan for a set of routes among the sites that might reduce total impact, by confining movement to a limited set of routes.
 This approach is consistent with work in ecology and park and wildlife management which suggests that path networks can reduce the impact of human movement in many environments [@Cole1995a;@Cole1995;@Kidd2015;@Marion2016;@Piscova2023;@Tomczyk2023].
-It also aligns with work in Antarctic studies evaluating the impacts of scientific work on desert paths [@Campbell1987,@Campbell1993,@ONeill2015] which broadly agrees that "where repeated use is likely over a long period [...] it is expected that the overall impact will be less if a track is allowed to form and then used repeatedly" [@ONeill2015, p. 288].
+It also aligns with work in Antarctic studies evaluating the impacts of scientific work on desert paths [@Campbell1987;@Campbell1993;@ONeill2015] which broadly agrees that "where repeated use is likely over a long period [...] it is expected that the overall impact will be less if a track is allowed to form and then used repeatedly" [@ONeill2015, p. 288].
 
 To develop potential impact reducing route networks we first determine the lengths of all shortest paths in the hiking network among all basecamp and experimental sites.
 This yields a reduced graph where vertices are the sites, each connected to all other vertices by directed edges weighted with a cost based on the shortest path length between the sites in the complete hiking network. 
@@ -1010,13 +1026,14 @@ Then we find the _minimum spanning tree_ for the reduced graph.
 The minimum spanning tree of a graph _G_ is a subgraph of _G_ with minimum total cost subject to the constraint that all vertices in _G_ are reachable from one another [@Prim1957].
 One wrinkle here is that our hiking network is a directed graph, and algorithms for finding the minimum spanning tree of a directed graph (referred to as a _minimum-cost arborescence_ or _optimal branching_) are more complex [@Korte2018a], and not supported in the `igraph` software.
 `igraph` handles this problem by treating a directed graph as undirected and in our application this is appropriate, because all we need is a minimal set of connections that ensure that all basecamp and experimental sites can be reached using the minimal network.
-Having found these connections we then include the shortest paths from the original hiking network in both directions between each pair of connected sites in the minimum spanning tree.
+We investigated the derivation of optimal branchings using the Python `networkx` module [@SciPyProceedings_11] and found them to be identical to our minimum spanning tree results in all cases.
+Having found the minimal set of connections we then include the shortest paths from the original hiking network in both directions between each pair of connected sites to yield a path network.
 
 The resulting path network for the same set of sites as in @fig-betweenness-limited-sites is shown in @fig-approx-minimum-arborescence.
 The differing least cost paths in each direction between some pairs of sites are apparent.
 In practice, such a network of potential paths could be a starting point for consideration in planning a scientific expedition.
-For example, in @fig-approx-minimum-arborescence, it might be preferable to 'disconnect' sites 3 and 13, and instead connect the basecamp (site 4) to site 13 to avoid traversal of the valley floor in this area in more than one location.
-Refinement of plans might also lead to only one of each of pair of connections between sites being used, or in some places due to ground conditions the preference might be to allow scientists to make their own way between sites to disperse the impact of trampling in those areas.
+For example, in @fig-approx-minimum-arborescence, many different configurations of connection among sites 4 (the basecamp) and sites 13, 3, and 9 might be considered to manage the impact of repeated traversal of the valley floor in this area.
+Refinement of plans might also lead to only one of each pair of connections between sites being used, or in some places due to ground conditions the preference might be to allow scientists to make their own way between sites to disperse the impact of trampling in those areas.
 
 ```{r}
 dist_m <- distances(G, origin_vs$id, origin_vs$id, weights = edge_attr(G, "cost"))
@@ -1073,7 +1090,7 @@ ggplot() +
   scale_fill_viridis_c(option = "A", direction = -1) +
   geom_sf(data = origin_vs, aes(size = Importance, colour = is_camp), pch = 1) +
   scale_colour_manual(values = c("black", "red")) +
-  geom_sf_text(data = origin_vs, aes(label = seq_no)) +
+  geom_sf_label(data = origin_vs, aes(label = seq_no), size = 2, hjust = 0, vjust = 0) +
   guides(fill = "none", size = "none", colour = "none") +
   theme_void()
 ```
@@ -1100,18 +1117,18 @@ Third, and we believe most significant, is the question of whether or not least 
 In the absence of more detailed data on conditions underfoot, on pre-existing paths from earlier expeditions, and on perceived risks associated with chosen routes, alongside many other factors, shortest paths estimated from hiking functions should be considered as only approximating likely movement patterns.
 The same concern extends to using betweenness measures to infer from shortest paths which areas are likely to be subject to repeated use over time.
 It seems common sense that this is a reasonable approach, but there is no way to validate this assumption.
-Furthermore, our use not of total betweenness, but of radius-limited betweenness rests on an implied model of movement that can only be verified anecdotally. 
-A radius-limited approach implies that in traversing such terrain a group of scientists plan their movements based on regularly reassessment of their route at regular intervals.
+Furthermore, our use not of total betweenness, but of radius-limited betweenness rests on an implied model of movement that while plausible cannot be directly verified. 
+A radius-limited approach implies that in traversing such terrain a group of scientists plan their movements based on reassessment of their route at regular intervals.
 As with an assumption that routes will be based on estimated shortest paths, this assumption can only be verified anecdotally.
 
-These limitations notwithstanding, our approach yields plausible seeming maps of the overall relative risk of impacts from scientist moving around in these environments, and offers the potential to plan for reducing impact in these vulnerable environments.
+These limitations notwithstanding, our approach yields plausible seeming maps of the overall relative risk of impacts from scientist moving around in Antarctica, and offers the potential to plan for reducing impact in these vulnerable environments.
 
 ### Planning to reduce impact
-Our proposal for planning expedition route networks responds to O'Neill et al.'s suggestion that, "long-term environmental impacts in Antarctica can be reduced through careful site remediation and site selection, but perhaps more importantly by taking appropriate action in the project design, planning, and operational stages of the activity" [-@ONeill2013, p. 529].
+Our proposal for planning expedition route networks responds to the suggestion that, "long-term environmental impacts in Antarctica can be reduced through careful site remediation and site selection, but perhaps more importantly by taking appropriate action in the project design, planning, and operational stages of the activity" [@ONeill2013, p. 529].
 However, it is clear, that planning should be more nuanced than developing a minimal set of connecting paths among expedition sites.
 While, as we have noted it is usually preferable to restrict movement to limited areas, the literature also notes that persistence of visible impacts of trampling in these environments depends on the specifics of the ground cover.
 For example, even limited trampling of _desert pavements_ can remain visible for many years [@ONeill2012; @ONeill2013], whereas "[r]ock outcrop areas are inherently more resilient to human activity" [@Brooks2019a p. 308].
-This means that a useful extenstion of least (time) cost movement paths would be to penalise movement based on terrain vulnerability to disturbance, in order to prioritise identification of routes that cross less vulnerable terrain.
+This means that a useful extension of least (time) cost movement paths would be to penalise movement based on terrain vulnerability to disturbance, in order to prioritise identification of routes that cross less vulnerable terrain.
 Trading off efficiency of movement and vulnerability to disturbance in a single network representation would be difficult however, since it is unclear what the trade-off rate should be between time and vulnerability.
 In practice, starting from our suggested least movement cost routes and adjusting those routes during planning based on detailed land cover surveys, or in the field based on educating scientists about the effects of their trampling on different terrain may be a more practical approach.
 
@@ -1124,3 +1141,5 @@ This is preferable to the more usual practice of applying a single hiking and pe
 Based on hiking functions we have shown how hiking networks can be built and used to estimate likely impacts using graph betweenness measures.
 We have further shown how applying radius-limiting to betweenness measures transitions maps of likely impact from ones that emphasise a limited number of arterial routes to more complex networks that emphasise localised variability in the terrain.
 Finally, we have suggested how hiking networks can be used to map out impact reducing route networks in the planning stage of scientific activity in Antarctica.
+
+## References {.unnumbered}
